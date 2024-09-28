@@ -12,4 +12,3 @@ discount factor, γ (gamma), at each step
 * Of course, a good action may be followed by several bad actions that cause the pole to fall quickly, resulting in the good action getting a low return
 * However, if we play the game enough times, on average good actions will get a higher return than bad ones. We want to estimate how much better or worse an action is, compared to the other possible actions, on average.
 * This is called the action advantage. For this, we must run many episodes and normalize all the action returns, by subtracting the mean and dividing by the standard deviation. After that, we can reasonably assume that actions with a negative advantage were bad while actions with a positive advantage were good
-* 
