@@ -15,11 +15,11 @@ import torch
 from torch import nn, Tensor
 from torch.utils.tensorboard import SummaryWriter
 
-SEED = 42 # SEED MATTERS A LOT!!! Change it and it might not work anymore
+SEED = 42
 random.seed(SEED)
 np.random.seed(SEED+1)
 torch.manual_seed(SEED+2)
-torch.use_deterministic_algorithms(mode=True, warn_only=False)
+torch.use_deterministic_algorithms(mode=True, warn_only=True)
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
 
