@@ -65,9 +65,11 @@ def show_one_episode(action_sampler:tp.Callable, n_max_steps=500, repeat=False):
 
 @dataclass
 class config:
-    num_steps:int = 50_000_000 # 50 million steps!!!
+    num_steps:int = 25_000_000 # 25 million steps!!!
     num_warmup_steps:int = 50_000
     gamma:float = 0.99
+
+    buffer_size:int = 1_000_000
     
     lr:float = 1e-4
     weight_decay:float = 0.0000
@@ -140,30 +142,30 @@ class DQN(nn.Module):
         x = self.fc2(x)
         return x
     
-def get_model(*args, **kwargs):
+def get_model(*args, log:bool=False, **kwargs):
     model = DQN(**kwargs)
     model.to(config.device)
-    print("\n\nModel input shape:", args)
-    print("Model output shape", model(torch.randn(*args, device=config.device)).shape, end="\n\n")
+    shape = model(torch.randn(*args, device=config.device)).shape
+    if log:
+        print("\n\nModel input shape:", args)
+        print("Model output shape", shape, end="\n\n")
     return model
 
 
-
-
 @torch.no_grad()
-def action_policy(dqn:DQN, obs:np.ndarray, epsilon:float) -> Tensor:
+def sample_action(dqn:DQN, obs:np.ndarray, epsilon:float) -> Tensor:
     if random.random() <= epsilon: return torch.randint(low=0, high=dqn.num_actions, size=(1,), device=config.device, generator=config.generator)
     else: return dqn(torch.as_tensor(obs, device=config.device)).squeeze(0).argmax()
 
 
 def train_step(dqn:DQN, replay_buffer:deque, optimizer:torch.optim.Optimizer):
     # sample instances
-    batched_samples = random.sample(replay_buffer, config.batch_size)
+    batched_samples = random.sample(replay_buffer, config.batch_size) # Frames stored in uint8 [0, 255]
     instances = list(zip(*batched_samples))
     next_states, actions, rewards, current_states, dones = [
         torch.as_tensor(np.asarray(inst), device=config.device, dtype=torch.float32) for inst in instances
     ]
-    current_states, next_states = current_states.squeeze(1).to(config.device), next_states.squeeze(1).to(config.device)
+    current_states, next_states = current_states.squeeze(1).to(config.device)/255., next_states.squeeze(1).to(config.device)/255. # (0.0, 1.0)
     # input model
     with torch.no_grad():
         with config.autocast:
@@ -197,14 +199,24 @@ def get_epsilon(step:int, start_eps:float=config.init_eps, end_eps:float=config.
     return end_eps
 
 
+def handle_buffer_to_store(buffer:tuple[Tensor, int, float, Tensor, bool]):
+    """
+    * assuming elements in the buffer is in CPU
+    * convert frames to uint8
+    """
+    (phi_next, action, reward, phi_prev, done) = buffer
+    to_uint8:tp.Callable[[Tensor], Tensor] = lambda phi: (phi*255).to(torch.uint8)
+    return (to_uint8(phi_next), action, reward, to_uint8(phi_prev), done)
+
+
 def main():
     env = gym.make(ENV_NAME, difficulty=0, obs_type="rgb", full_action_space=False)
-    model = get_model(1, 4, 80, 80, fan_in=4, fan_out=int(env.action_space.n))
+    model = get_model(1, 4, 80, 80, log=True, fan_in=4, fan_out=int(env.action_space.n))
     print(model, "\nNumber of parameters:", sum(p.numel() for p in model.parameters() if p.requires_grad))
     model.compile()
 
-    replay_buffer = deque(maxlen=1_000_000)
-    optimizer = torch.optim.Adam(
+    replay_buffer = deque(maxlen=config.buffer_size)
+    optimizer = torch.optim.AdamW(
         model.parameters(),
         lr=config.lr,
         weight_decay=config.weight_decay,
@@ -226,17 +238,18 @@ def main():
             ]).unsqueeze(0) # (1, 4, 80, 80)
             reward_sum = 0; t0 = time.time()
             for tstep in count(0):
-                num_steps_over += 1
+                epsilon = get_epsilon(num_steps_over)
                 # agent selects action every 4th frame, it's last action is repeated on the skipped frames # THIS IS ALREADY IMPLEMENTED IN THE ENVIRONMENT
-                action = int(action_policy(model, phi_prev, epsilon=(epsilon:=get_epsilon(num_steps_over))).item())
+                action = int(sample_action(model, phi_prev, epsilon=epsilon).item())
                 assert 0 <= action <= 5, f"Action: {action} is not in the range [0, 5]"
                 state, reward, done, truncated, info = env.step(action)
+                num_steps_over = info["frame_number"]
                 if reward > 0:
                     print(f"\t|| Reward {reward} ||", end="")
 
                 phi_next = torch.cat([prepro(state).unsqueeze(0), phi_prev[:, :-1]], dim=1)
-                buffer = (phi_next.cpu(), action, reward, phi_prev.cpu(), done) # convert to cpu to store: CPU memory is cheaper
-                replay_buffer.append(buffer)
+                # convert to cpu to store: CPU memory is cheaper
+                replay_buffer.append(handle_buffer_to_store((phi_next.cpu(), action, reward, phi_prev.cpu(), done)))
                 phi_prev = phi_next
 
                 if num_steps_over > config.num_warmup_steps:
@@ -262,15 +275,14 @@ def main():
             
             # TENSORBOARD LOGGING
             writer.add_scalar("Sum of Reward", reward_sum, num_steps_over)
-            writer.add_scalar("Epsilon", epsilon, num_steps_over)
             writer.add_scalar("Steps per Episode", tstep, num_steps_over)
 
             if num_steps_over >= config.num_steps:
                 print(f"Training Completed {num_steps_over}..."); break
     except KeyboardInterrupt:
-        print("Training Interrupted...")
+        print("\nTraining Interrupted...")
 
-    writer.close()
+    writer.close(); env.close()
     torch.save(model.state_dict(), f"ckpt/model_final{num_steps_over}.pth")
 
     plt.plot(sum_rewards)
@@ -281,6 +293,32 @@ def main():
     plt.savefig(os.path.join("ckpt", "sum_rewards.png"))
     plt.show()
 
+def check_enough_ram(crash_if_no_mem):
+    """https://github.com/gordicaleksa/pytorch-learn-reinforcement-learning/blob/main/utils/replay_buffer.py#L169-L185"""
+    import psutil
+    def to_GBs(memory_in_bytes):
+        return f'{memory_in_bytes / 2 ** 30:.2f} GBs'
+
+    available_memory = psutil.virtual_memory().available
+    frames = torch.zeros([config.buffer_size] + [4, 80, 80], dtype=torch.uint8)
+    actions = torch.zeros([config.buffer_size, 1], dtype=torch.uint8) # [0, 1, 2, 3, 4, 5]
+    rewards = torch.zeros([config.buffer_size, 1], dtype=torch.float32)  # [-1, 0, 1]
+    dones = torch.zeros([config.buffer_size, 1], dtype=torch.bool) # [True, False]
+
+    required_memory = frames.nbytes + actions.nbytes + rewards.nbytes + dones.nbytes
+    print(f'required memory = {to_GBs(required_memory)}, available memory = {to_GBs(available_memory)}')
+
+    if required_memory > available_memory:
+        message = f"Not enough memory to store the complete replay buffer! \n" \
+                    f"required: {to_GBs(required_memory)} > available: {to_GBs(available_memory)} \n" \
+                    f"Page swapping will make your training super slow once you hit your RAM limit." \
+                    f"You can either modify replay_buffer_size argument or set crash_if_no_mem to False to ignore it."
+        if crash_if_no_mem:
+            raise MemoryError(message)
+        else:
+            print(message)
+
 
 if __name__ == "__main__":
+    check_enough_ram(crash_if_no_mem=True)
     main()

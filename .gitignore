@@ -1,3 +1,15 @@
+books
+testing
+*copy*
+runs
+
+# Ignore all files in the ckpt directory
+ckpt/*
+
+# Allow files with "final" in their name
+!ckpt/*final*
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
