@@ -1,5 +1,11 @@
 # Reinforcement-Learning
-## Playing Atari with Deep Reinforcement Learning (Important Clips from the paper)
+## Playing Atari with Deep Reinforcement Learning
+
+![Alt Text](images/dqn_pong.gif)
+
+![image](https://github.com/user-attachments/assets/c778e6b2-bf32-4638-a835-e7d6d3490844)
+
+## (Important Clips from the paper)
 * The
 model is a convolutional neural network, trained with a variant of Q-learning,
 whose input is raw pixels and whose output is a value function estimating future
@@ -11,7 +17,7 @@ Environment, with no adjustment of the architecture or learning algorithm
 that operate on these domains have relied on hand-crafted features combined with linear value
 functions or policy representations. Clearly, the performance of such systems heavily relies on the
 quality of the feature representation.
-* Firstly, most successful deep learning applications to date have required large amounts of handlabelled
+* Firstly, most successful deep learning applications to date have required large amounts of hand labelled
 training data
 * RL algorithms, on the other hand, must be able to learn from a scalar reward
 signal that is frequently sparse, noisy and delayed. The delay between actions and resulting rewards,
