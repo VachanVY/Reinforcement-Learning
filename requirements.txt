@@ -1,0 +1,6 @@
+ale_py==0.10.1
+gymnasium==1.0.0
+matplotlib==3.9.2
+numpy==2.1.3
+psutil==6.0.0
+torch==2.4.0+cu121
