@@ -1,9 +1,15 @@
 # Reinforcement-Learning
 ## Playing Atari with Deep Reinforcement Learning
+```python
+pip install -r requirements.txt # INSTALL REQUIRED LIBRARIES
+python dqn.py # TO TRAIN FROM SCRATCH
+python dqn_play.py # TO GENERATE .gif OF AI AGENT PLAYING PONG
+```
 
 ![Alt Text](images/dqn_pong.gif)
-
-![image](https://github.com/user-attachments/assets/c778e6b2-bf32-4638-a835-e7d6d3490844)
+![](images/sum_reward_tensorboard.png)
+![](images/steps_per_ep_dqn.png)
+![](images/loss_dqn.png)
 
 ## (Important Clips from the paper)
 * The
