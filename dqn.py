@@ -26,43 +26,6 @@ torch.backends.cudnn.allow_tf32 = True
 
 ENV_NAME = "ALE/Pong-v5"
 
-
-def plot_environment(env:gym.Env, figsize:tuple[int, int]=(5, 4)):
-    plt.figure(figsize=figsize)
-    img = env.render()
-    plt.imshow(img)
-    plt.axis("off")
-    return img
-
-def update_scene(num, frames, patch):
-    patch.set_data(frames[num])
-    return patch,
-
-def plot_animation(frames:list, repeat=False, interval=40):
-    fig = plt.figure()
-    patch = plt.imshow(frames[0])
-    plt.axis('off')
-    animation = anim.FuncAnimation(
-        fig, update_scene, fargs=(frames, patch),
-        frames=len(frames), repeat=repeat, interval=interval)
-    return animation
-
-def show_one_episode(action_sampler:tp.Callable, n_max_steps=500, repeat=False):
-    frames = []
-    env = gym.make(ENV_NAME, render_mode="rgb_array")
-    obs, info = env.reset()
-    with torch.no_grad():
-        for step in range(n_max_steps):
-            frames.append(env.render())
-            action = action_sampler(obs)
-            obs, reward, done, truncated, info = env.step(action)
-            if done or truncated:
-                print("done at step", step+1)
-                break
-    env.close()
-    return plot_animation(frames, repeat=repeat)
-
-
 @dataclass
 class config:
     num_steps:int = 25_000_000 # 25 million steps!!!
