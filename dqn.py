@@ -15,16 +15,10 @@ import torch
 from torch import nn, Tensor
 from torch.utils.tensorboard import SummaryWriter
 
+
 SEED = 42
-random.seed(SEED)
-np.random.seed(SEED+1)
-torch.manual_seed(SEED+2)
-torch.use_deterministic_algorithms(mode=True, warn_only=True)
-torch.backends.cuda.matmul.allow_tf32 = True
-torch.backends.cudnn.allow_tf32 = True
-
-
 ENV_NAME = "ALE/Pong-v5"
+
 
 @dataclass
 class config:
@@ -173,6 +167,13 @@ def handle_buffer_to_store(buffer:tuple[Tensor, int, float, Tensor, bool]):
 
 
 def main():
+    random.seed(SEED)
+    np.random.seed(SEED+1)
+    torch.manual_seed(SEED+2)
+    torch.use_deterministic_algorithms(mode=True, warn_only=True)
+    torch.backends.cuda.matmul.allow_tf32 = True
+    torch.backends.cudnn.allow_tf32 = True
+
     env = gym.make(ENV_NAME, difficulty=0, obs_type="rgb", full_action_space=False)
     model = get_model(1, 4, 80, 80, log=True, fan_in=4, fan_out=int(env.action_space.n))
     print(model, "\nNumber of parameters:", sum(p.numel() for p in model.parameters() if p.requires_grad))
