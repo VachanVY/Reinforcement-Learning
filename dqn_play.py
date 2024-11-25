@@ -8,10 +8,18 @@ from itertools import count
 from dqn import get_model, prepro
 
 if __name__ == "__main__":
+    torch.backends.cuda.matmul.allow_tf32 = True
+    torch.backends.cudnn.allow_tf32 = True
+
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--difficulty", type=int, default=0)
+    args = parser.parse_args()
+
     ENV_NAME = "ALE/Pong-v5"
     MODEL_WEI_PATH = "ckpt/model_final21551787.pth"
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    env = gym.make(ENV_NAME, render_mode="rgb_array")
+    env = gym.make(ENV_NAME, render_mode="rgb_array", difficulty=args.difficulty)
 
     def plot_environment(env:gym.Env, figsize:tuple[int, int]=(5, 4)):
         plt.figure(figsize=figsize)

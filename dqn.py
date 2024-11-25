@@ -129,7 +129,6 @@ def train_step(dqn:DQN, replay_buffer:deque, optimizer:torch.optim.Optimizer):
             next_Q_val:Tensor = dqn(next_states) # (B, num_actions)
 
         next_Q_val = next_Q_val.max(dim=1).values
-        #for the condition from the algorithm above
         zero_if_terminal_else_one = 1 - dones # 0 if done==True else 1
 
         Qtarget:Tensor = (rewards + config.gamma * next_Q_val * zero_if_terminal_else_one) # (B,)
