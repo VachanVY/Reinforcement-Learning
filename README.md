@@ -105,6 +105,24 @@ emphasize transitions from which we can learn the most, similar to prioritized s
 ```python
 python qlearning_sarsa_expectedsarsa_on_cliff_walking.py --animation True --experiments True
 ```
-* ![qlearning](images/cliff_walking_qlearning.gif)
-* ![sarsa](images/cliff_walking_sarsa.gif)
-* ![expected_sarsa](images/cliff_walking_expected_sarsa.gif)
+<div style="display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap;">
+  <img src="images/cliff_walking_qlearning.gif" alt="Q-Learning Cliff Walking" width="300">
+  <img src="images/cliff_walking_sarsa.gif" alt="SARSA Cliff Walking" width="300">
+  <img src="images/cliff_walking_expected_sarsa.gif" alt="Expected SARSA Cliff Walking" width="300">
+</div>
+
+* Q-learning learns the optimal policy that travels right along the edge, this may result in the agent occasionally falling off the cliff when **TRAINING** (not during inference) with an epsilon-greedy policy which is the reason for getting a lower `sum of rewards` during training than Sarsa and Expected Sarsa
+<div style="display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap;">
+  <img src="images/cliff_walking_gamma0.99_alpha0.1_epsilon0.1.png" alt="Gamma 0.99, Alpha 0.1, Epsilon 0.1" width="200">
+  <img src="images/cliff_walking_gamma0.95_alpha0.1_epsilon0.1.png" alt="Gamma 0.95, Alpha 0.1, Epsilon 0.1" width="200">
+  <img src="images/cliff_walking_gamma0.8_alpha0.1_epsilon0.1.png" alt="Gamma 0.8, Alpha 0.1, Epsilon 0.1" width="200">
+  <img src="images/cliff_walking_gamma0.99_alpha0.01_epsilon0.png" alt="Gamma 0.99, Alpha 0.01, Epsilon 0" width="200">
+  <img src="images/cliff_walking_gamma0.75_alpha0.1_epsilon0.png" alt="Gamma 0.75, Alpha 0.1, Epsilon 0" width="200">
+  <img src="images/cliff_walking_gamma0.75_alpha0.1_epsilon0.1.png" alt="Gamma 0.75, Alpha 0.1, Epsilon 0.1" width="200">
+  <img src="images/cliff_walking_gamma0.9_alpha0.1_epsilon0.1.png" alt="Gamma 0.9, Alpha 0.1, Epsilon 0.1" width="200">
+  <img src="images/cliff_walking_gamma0.9_alpha0.1_epsilon0.1.png" alt="Gamma 0.9, Alpha 0.1, Epsilon 0.1" width="200">
+</div>
+
+
+![image](https://github.com/user-attachments/assets/57246c91-0eeb-44c4-ac28-db057afef960)
+
