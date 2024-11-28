@@ -32,10 +32,11 @@ if __name__ == "__main__":
         patch.set_data(frames[num])
         return patch,
 
-    def plot_animation(frames:list, save_path:str, repeat=False, interval=50):
+    def plot_animation(frames:list, save_path:str, title:str, repeat=False, interval=50):
         fig = plt.figure()
         patch = plt.imshow(frames[0])
         plt.axis('off')
+        plt.title(title, fontsize=7)
         animation = anim.FuncAnimation(
             fig, update_scene, fargs=(frames, patch),
             frames=len(frames), repeat=repeat, interval=interval)
@@ -64,7 +65,8 @@ if __name__ == "__main__":
                     print(f"|| sum_rewards: {sum_rewards} ||")
                     break
         env.close()
-        return plot_animation(frames, save_path, repeat=repeat)
+        title = "Our trained agent on the right playing with a hardcoded agent on the left side"
+        return plot_animation(frames, save_path, title=title, repeat=repeat)
 
 
     dqn = get_model(1, 4, 80, 80, log=False, fan_in=4, fan_out=int(env.action_space.n))
