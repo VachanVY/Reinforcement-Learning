@@ -36,7 +36,7 @@ if __name__ == "__main__":
         fig = plt.figure()
         patch = plt.imshow(frames[0])
         plt.axis('off')
-        plt.title(title, fontsize=7)
+        plt.title(title, fontsize=10)
         animation = anim.FuncAnimation(
             fig, update_scene, fargs=(frames, patch),
             frames=len(frames), repeat=repeat, interval=interval)
