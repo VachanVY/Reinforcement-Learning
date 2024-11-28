@@ -7,10 +7,12 @@
      * Trained a Deep Q-Network on Pong game
      * [Train File: dqn.py (Single File)](https://github.com/VachanVY/Reinforcement-Learning/blob/main/dqn.py)
 
-![Alt Text](images/dqn_pong.gif)
-![qlearning](images/cliff_walking_qlearning.gif)
-![sarsa](images/cliff_walking_sarsa.gif)
-![expected_sarsa](images/cliff_walking_expected_sarsa.gif)
+<div style="display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap;">
+  <img src="images/dqn_pong.gif" alt="DQN Pong" width="300">
+  <img src="images/cliff_walking_qlearning.gif" alt="Q-Learning Cliff Walking" width="300">
+  <img src="images/cliff_walking_sarsa.gif" alt="SARSA Cliff Walking" width="300">
+  <img src="images/cliff_walking_expected_sarsa.gif" alt="Expected SARSA Cliff Walking" width="300">
+</div>
 
 
 ## Playing Atari with Deep Reinforcement Learning
