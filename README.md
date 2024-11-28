@@ -1,10 +1,17 @@
 # Reinforcement-Learning
 ## Contents
-* [Q-learning, Sarsa and Expected Sarsa on Cliff-Walking]()
+* [Q-learning, Sarsa and Expected Sarsa on Cliff-Walking](https://github.com/VachanVY/Reinforcement-Learning/tree/main?tab=readme-ov-file#q-learning-sarsa-and-expected-sarsa-on-cliff-walking)
+     * Trained an agent on the `CliffWalking` environment using Q-learning, Sarsa and Expected Sarsa Algorithms
+     * [Animation of the agent and EXperiments on the Algorithms](https://github.com/VachanVY/Reinforcement-Learning/blob/main/qlearning_sarsa_expectedsarsa_on_cliff_walking.py)
 * [Playing Atari with Deep Reinforcement Learning](https://github.com/VachanVY/Reinforcement-Learning?tab=readme-ov-file#playing-atari-with-deep-reinforcement-learning)
      * Trained a Deep Q-Network on Pong game
      * [Train File: dqn.py (Single File)](https://github.com/VachanVY/Reinforcement-Learning/blob/main/dqn.py)
- * 
+
+![Alt Text](images/dqn_pong.gif)
+![qlearning](images/cliff_walking_qlearning.gif)
+![sarsa](images/cliff_walking_sarsa.gif)
+![expected_sarsa](images/cliff_walking_expected_sarsa.gif)
+
 
 ## Playing Atari with Deep Reinforcement Learning
 ```python
