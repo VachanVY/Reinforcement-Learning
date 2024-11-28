@@ -42,7 +42,7 @@ if __name__ == "__main__":
         animation.save(save_path, writer="pillow", fps=20)
         return animation
 
-    def show_one_episode(action_sampler:Callable, save_path:str, n_max_steps=500, repeat=False):
+    def show_one_episode(action_sampler:Callable, save_path:str, repeat=False):
         frames = []
         state, info = env.reset()
         phi = torch.cat([
@@ -78,4 +78,3 @@ if __name__ == "__main__":
     dqn.load_state_dict(torch.load(MODEL_WEI_PATH, map_location=DEVICE, weights_only=True))
 
     show_one_episode(sample_action, "images/dqn_pong.gif", repeat=False)
-    print()
