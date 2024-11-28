@@ -1,4 +1,11 @@
 # Reinforcement-Learning
+## Contents
+* [Q-learning, Sarsa and Expected Sarsa on Cliff-Walking]()
+* [Playing Atari with Deep Reinforcement Learning](https://github.com/VachanVY/Reinforcement-Learning?tab=readme-ov-file#playing-atari-with-deep-reinforcement-learning)
+     * Trained a Deep Q-Network on Pong game
+     * [Train File: dqn.py (Single File)](https://github.com/VachanVY/Reinforcement-Learning/blob/main/dqn.py)
+ * 
+
 ## Playing Atari with Deep Reinforcement Learning
 ```python
 pip install -r requirements.txt # INSTALL REQUIRED LIBRARIES
@@ -84,3 +91,11 @@ emphasize transitions from which we can learn the most, similar to prioritized s
 
 ### Experiments
 * ![image](https://github.com/user-attachments/assets/56ec5a1b-8976-4de8-9a48-904af341c71d)
+
+## Q-learning, Sarsa and Expected Sarsa on Cliff-Walking
+```python
+python qlearning_sarsa_expectedsarsa_on_cliff_walking.py --animation True --experiments True
+```
+* ![qlearning](images/cliff_walking_qlearning.gif)
+* ![sarsa](images/cliff_walking_sarsa.gif)
+* ![expected_sarsa](images/cliff_walking_expected_sarsa.gif)
