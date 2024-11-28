@@ -177,8 +177,18 @@ def experiment(alpha:float, gamma:float, epsilon:float):
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--experiments", type=bool, default=False)
-    parser.add_argument("--animation", type=bool, default=True)
+
+    def t_or_f(arg):
+        ua = str(arg).upper()
+        if 'TRUE'.startswith(ua):
+            return True
+        elif 'FALSE'.startswith(ua):
+            return False
+        else:
+            raise ValueError("Expected True or False")
+
+    parser.add_argument("--experiments", type=t_or_f, default=False)
+    parser.add_argument("--animation", type=t_or_f, default=True)
     args = parser.parse_args()
 
     if args.animation:
