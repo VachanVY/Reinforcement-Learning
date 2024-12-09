@@ -1,11 +1,42 @@
 # Reinforcement-Learning
-## Contents
-* [Q-learning, Sarsa and Expected Sarsa on Cliff-Walking](https://github.com/VachanVY/Reinforcement-Learning/tree/main?tab=readme-ov-file#q-learning-sarsa-and-expected-sarsa-on-cliff-walking)
-     * Trained an agent on the `CliffWalking` environment using Q-learning, Sarsa and Expected Sarsa Algorithms
-     * [Animation of the agent and EXperiments on the Algorithms](https://github.com/VachanVY/Reinforcement-Learning/blob/main/qlearning_sarsa_expectedsarsa_on_cliff_walking.py)
-* [Playing Atari with Deep Reinforcement Learning](https://github.com/VachanVY/Reinforcement-Learning?tab=readme-ov-file#playing-atari-with-deep-reinforcement-learning)
-     * Trained a Deep Q-Network on Pong game
-     * [Train File: dqn.py (Single File)](https://github.com/VachanVY/Reinforcement-Learning/blob/main/dqn.py)
+## Reinforcement Learning: An Introduction by Andrew Barto and Richard S. Sutton
+* [Dynamic Programming]()
+  * [Policy Iteration - Policy Evaluation & Policy Iteration]()
+  * [Value Iteration]()
+* [Monte-Carlo Methods]()
+  * [Monte Carlo Exploring Starts]()
+* [Temporal-Difference (Tabular)]()
+  * Sarsa
+  * Q-learning
+  * Expected Sarsa
+  * Double Q-learning **(TODO)**
+* [n-step Bootstrapping (**TODO**)]
+* Planning and Learning with Tabular Methods (**TODO**)
+* [On-policy Prediction with Approximation]()
+  * Covered in [Papers]() Section, where we use function approximators like Neural Networks for RL
+* On-policy Control with Approximation (**TODO**)
+* Off-policy Methods with Approximation (**TODO**)
+* Eligibility Traces (**TODO**)
+* [Policy Gradient Methods]()
+  * [Monte-Carlo Policy-Gradient]()
+  * [REINFORCE with Baseline]()
+  * [One-Step Actor-Critic]()
+  * [Policy Gradient on Continuous Actions]()
+
+---
+## Reinforcement Learning: Paper Implementations
+* [2013: Playing Atari with Deep Reinforcement Learning]()
+* Prioritized DDQN || 2015: Deep Reinforcement Learning with Double Q-learning **+** 2016 Prioritized Experience Replay || **(TODO)**
+* [2017: Proximal Policy Optimization (PPO)]()
+* 2014: Deterministic Policy Gradient **(TODO)**
+* 2018: Soft Actor-Critic **(TODO)**
+* AlphaGo, AlphaZero, AlphaFold, etc: **(TODO)**
+  * 2017: Mastering the game of go without human knowledge
+  * 2017: AlphaZero
+  * 2020: Mastering Atari, Go, chess and shogi by planning with a learned model
+  * 20xx: AlphaFold
+
+---
 
 <div style="display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap;">
   <img src="images/dqn_pong.gif" alt="DQN Pong" width="300">
