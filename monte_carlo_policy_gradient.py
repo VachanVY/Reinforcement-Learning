@@ -56,8 +56,8 @@ def show_one_episode(action_sampler:tp.Callable, save_path:str, n_max_steps=500,
 
 
 class config:
-    num_iters:int = 800
-    num_episodes_per_iter:int = 10
+    num_episodes:int = 800 # number of episodes
+    batch_size:int = 10
     max_steps_per_episode:int = 1000
     
     gamma:float = 0.95
@@ -160,14 +160,14 @@ def apply_grads(grads:list[list[Tensor]], rewards:list[list[Tensor]]):
 
 def play():
     episode_length_avgs = []
-    for iter_num in range(1, config.num_iters+1):
+    for iter_num in range(1, config.num_episodes+1):
         t0 = time.time()
         all_rewards, all_grads = [], []
         lr = get_lr(iter_num)
         for param_group in optimizer.param_groups:
             param_group["lr"] = lr
 
-        for episode in range(config.num_episodes_per_iter):
+        for episode in range(config.batch_size):
             current_grads, current_rewards = [], []
             obs, info = env.reset()
             for step in range(config.max_steps_per_episode):
@@ -180,8 +180,8 @@ def play():
             
             all_rewards.append(current_rewards); all_grads.append(current_grads)
         t1 = time.time(); dt = t1-t0
-        episode_len_avg = sum(map(len, all_rewards))/config.num_episodes_per_iter; episode_length_avgs.append(episode_len_avg)
-        print(f"| Step: {iter_num}/{config.num_iters} || Average Episode Length {episode_len_avg:.2f} || lr: {lr:e} || dt: {dt:.2f}s |")
+        episode_len_avg = sum(map(len, all_rewards))/config.batch_size; episode_length_avgs.append(episode_len_avg)
+        print(f"| Step: {iter_num}/{config.num_episodes} || Average Episode Length {episode_len_avg:.2f} || lr: {lr:e} || dt: {dt:.2f}s |")
 
         all_rewards = list(map(lambda r:discount_rewards(r, config.gamma), all_rewards))
 
@@ -209,7 +209,7 @@ if __name__ == "__main__":
     get_lr = CosineDecayWithWarmup(
         warmup_steps=1,
         max_learning_rate=config.lr,
-        decay_steps=config.num_iters,
+        decay_steps=config.num_episodes,
         min_learning_rate=config.lr*0.1
     )
     print(pi, sum(p.numel() for p in pi.parameters()), sep="\nNumber of parameters: ")
