@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from itertools import count
 import matplotlib.pyplot as plt
 import matplotlib.animation as anim
+import time
 
 import torch
 from torch import nn, Tensor
@@ -56,6 +57,7 @@ class config:
     target_kl:float = 0.01 # Usually 0.01 or 0.05
 
     ## Training config
+    log_losses:bool = False
     lr_actor:float = 3e-4
     lr_critic:float = 1e-3
     K:int = 80
@@ -225,12 +227,12 @@ def update():
 
 def train():
     try:
-        sum_rewards_list = []; num_steps = int(0); avg_kl_div_list = []
+        sum_rewards_list = []; num_steps = int(0); avg_kl_div_list = []; episode_length_list = []
         for episode_num in count(1):
             state, info = env.reset()
             state = torch.as_tensor(state, device=config.device)
             sum_rewards = int(0)
-            for tstep in count(0):
+            for tstep in count(1):
                 num_steps += 1
 
                 # Sample action from old policy
@@ -245,7 +247,8 @@ def train():
 
                 if num_steps % config.update_timestep == 0:
                     (avg_policy_loss, avg_val_loss, avg_kl_div) = update() ; avg_kl_div_list.append(avg_kl_div)
-                    print(f"|| Episode {episode_num} || Policy loss Avg: {avg_policy_loss:.3f} || Value loss Avg: {avg_val_loss:.3f} || KL Div Avg: {avg_kl_div:.4f} ||")
+                    if config.log_losses:
+                        print(f"|| Episode {episode_num} || Policy loss Avg: {avg_policy_loss:.3f} || Value loss Avg: {avg_val_loss:.3f} || KL Div Avg: {avg_kl_div:.4f} ||")
 
                 if terminal or truncated:
                     break
@@ -257,13 +260,15 @@ def train():
                 state = torch.as_tensor(next_state, device=config.device)
 
             sum_rewards_list.append(sum_rewards)
+            episode_length_list.append(tstep)
 
             # Logging
-            print(f"\t|| Episode Number: {episode_num} || Sum rewards: {sum_rewards} ||")
+            tab_char = "\t" if config.log_losses else ""
+            print(f"{tab_char}|| Episode Number: {episode_num} || Sum rewards: {sum_rewards:.2f} || Episode Length: {tstep} ||")
     except KeyboardInterrupt:
         print("Training interrupted.")
     actor_critic_old.load_state_dict(actor_critic.state_dict())
-    return sum_rewards_list, avg_kl_div_list
+    return sum_rewards_list, avg_kl_div_list, episode_length_list
 
 def action_sampler(state:np.ndarray):
     return sample_action(torch.as_tensor(state, device=config.device).unsqueeze(0))[0].item()
@@ -302,26 +307,38 @@ if __name__ == "__main__":
     replay_buffer = Buffer()
     print(actor_critic)
     print("Number of parameters:", sum(p.numel() for p in actor_critic.parameters()))
+    time.sleep(3)
 
-    sum_rewards_list, avg_kl_div_list = train()
+    sum_rewards_list, avg_kl_div_list, episode_length_list = train()
 
-    plt.plot(sum_rewards_list, label="Sum of Rewards")
-    plt.xlabel("Episode")
-    plt.ylabel("Sum of Rewards")
-    plt.title("Sum of Rewards vs Episode")
-    plt.legend()
-    plt.grid()
+    fig, axes = plt.subplots(3, 1, figsize=(10, 15))
+
+    axes[0].plot(sum_rewards_list, label="Sum of Rewards")
+    axes[0].set_xlabel("Episode")
+    axes[0].set_ylabel("Sum of Rewards")
+    axes[0].set_title("Sum of Rewards vs Episode")
+    axes[0].legend()
+    axes[0].grid()
+
+    axes[1].plot(episode_length_list, label="Episode Length", color="orange")
+    axes[1].set_xlabel("Episode")
+    axes[1].set_ylabel("Episode Length")
+    axes[1].set_title("Episode Length vs Episode")
+    axes[1].legend()
+    axes[1].grid()
+
+    axes[2].plot(avg_kl_div_list, label="KL Divergence", color="green")
+    axes[2].set_xlabel("Steps")
+    axes[2].set_ylabel("KL Divergence")
+    axes[2].set_title("KL Divergence")
+    axes[2].legend()
+    axes[2].grid()
+
+    plt.tight_layout()
+    plt.savefig(f"images/{ENV_NAME}_combined_plots.png")
     plt.show()
 
-    plt.plot(avg_kl_div_list, label="KL Divergence")
-    plt.xlabel("Steps")
-    plt.ylabel("KL Divergence")
-    plt.title("KL Divergence")
-    plt.legend()
-    plt.grid()
-    plt.show()
-
-    torch.save(actor_critic_old, ckpt_path:="ckpt/ppo_lunarlander.pth")
+    torch.save(actor_critic_old, ckpt_path:=f"ckpt/ppo_{ENV_NAME}.pth")
     print("Model saved to", ckpt_path)
 
-    show_one_episode(action_sampler, save_path="images/lunar_lander.gif", repeat=False)
+    show_one_episode(action_sampler, save_path=f"images/{ENV_NAME}.gif", repeat=False)
