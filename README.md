@@ -6,9 +6,9 @@
 * [Monte-Carlo Methods]()
   * [Monte Carlo Exploring Starts]()
 * [Temporal-Difference (Tabular)]()
-  * Sarsa
-  * Q-learning
-  * Expected Sarsa
+  * [Sarsa]()
+  * [Q-learning]()
+  * [Expected Sarsa]()
   * Double Q-learning **(TODO)**
 * [n-step Bootstrapping (**TODO**)]
 * Planning and Learning with Tabular Methods (**TODO**)
@@ -21,7 +21,7 @@
   * [Monte-Carlo Policy-Gradient]()
   * [REINFORCE with Baseline]()
   * [One-Step Actor-Critic]()
-  * [Policy Gradient on Continuous Actions]()
+  * Policy Gradient on Continuous Actions (**TODO**)
 
 ---
 ## Reinforcement Learning: Paper Implementations
