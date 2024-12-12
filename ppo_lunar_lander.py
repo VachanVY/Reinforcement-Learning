@@ -286,7 +286,7 @@ if __name__ == "__main__":
     print("States:", env.observation_space.shape[0])
     print("Actions:", env.action_space.n)
 
-    print("CONFIG:", config, sep="\n")
+    print("CONFIG:", config(), sep="\n")
 
     NUM_ACTIONS = env.action_space.n
     NUM_STATES = env.observation_space.shape[0]
