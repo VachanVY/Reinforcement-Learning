@@ -2,7 +2,7 @@
 ## Reinforcement Learning: An Introduction by Andrew Barto and Richard S. Sutton
 * [Dynamic Programming]()
   * [Policy Iteration - Policy Evaluation & Policy Iteration]()
-  * [Value Iteration]()
+  * Value Iteration **(TODO)**
 * [Monte-Carlo Methods]()
   * [Monte Carlo Exploring Starts]()
 * [Temporal-Difference (Tabular)]()
@@ -28,7 +28,7 @@
 * [2013: Playing Atari with Deep Reinforcement Learning]()
 * Prioritized DDQN || 2015: Deep Reinforcement Learning with Double Q-learning **+** 2016 Prioritized Experience Replay || **(TODO)**
 * [2017: Proximal Policy Optimization (PPO)]()
-* 2014: Deterministic Policy Gradient **(TODO)**
+* [2014: Deterministic Policy Gradient]()
 * 2018: Soft Actor-Critic **(TODO)**
 * AlphaGo, AlphaZero, AlphaFold, etc: **(TODO)**
   * 2017: Mastering the game of go without human knowledge
