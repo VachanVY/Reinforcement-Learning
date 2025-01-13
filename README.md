@@ -1,5 +1,6 @@
 # Reinforcement-Learning
 ## Reinforcement Learning: An Introduction by Andrew Barto and Richard S. Sutton
+> Below links don't redirect anywhere, gotta refactor the code and add links, for now go to the repo directly👆
 * [Dynamic Programming]()
   * [Policy Iteration - Policy Evaluation & Policy Iteration]()
   * Value Iteration **(TODO)**
@@ -25,6 +26,7 @@
 
 ---
 ## Reinforcement Learning: Paper Implementations
+> Below links don't redirect anywhere, gotta refactor the code and add links, for now go to the repo directly👆
 * [2013: Playing Atari with Deep Reinforcement Learning]()
 * Prioritized DDQN || 2015: Deep Reinforcement Learning with Double Q-learning **+** 2016 Prioritized Experience Replay || **(TODO)**
 * [2017: Proximal Policy Optimization (PPO)]()
