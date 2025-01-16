@@ -185,6 +185,10 @@ def main():
 
         print(f"|| Episode: {episode_num+1} || Reward: {sum_rewards} || lr: {lr:<12e} || dt: {(time.time()-t0):.4f} ||")
         sum_rewards_list.append(sum_rewards)
+
+        if sum_rewards[-50:].mean() > 490:
+                break
+        
     print("Training Ends...")
     return sum_rewards_list
 
@@ -224,10 +228,6 @@ if __name__ == "__main__":
     def action_sampler(state):
         return sample_prob_action_from_pi(pi_fn, torch.as_tensor(state, dtype=torch.float32, device=config.device))[0].item()
     
-    print("Making GIF...")
-    show_one_episode(action_sampler, repeat=False, n_max_steps=500, save_path="images/actor_critic_cartpole.gif")
-    print("GIF Created Successfully!")
-
     plt.plot(sum_rewards_list, label="Original rewards")
     plt.plot(smooth_rewards(sum_rewards_list, smoothing_factor=0.99), label="Smoothed rewards")
     plt.legend()
@@ -235,4 +235,11 @@ if __name__ == "__main__":
     plt.xlabel("Episode")
     plt.ylabel("Sum of rewards")
     plt.title("Sum of rewards per episode")
-    plt.show()
+    plt.savefig("actor_critic_cartpole_rewards.png")
+    plt.close()
+
+    print("Making GIF...")
+    show_one_episode(action_sampler, repeat=False, n_max_steps=500, save_path="actor_critic_cartpole.gif")
+    plt.close()
+    print("GIF Created Successfully!")
+
