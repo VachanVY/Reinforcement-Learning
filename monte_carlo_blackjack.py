@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import seaborn as sns
+import matplotlib.animation as anim
 
 
 def init_policy():
@@ -215,11 +216,46 @@ def plot_policy_actions(policy_pi):
     plt.show()
 
 
+def update_scene(num, frames, patch):
+    patch.set_data(frames[num])
+    return patch,
+
+def plot_animation(frames:list, save_path:str, title:str=None, repeat=False, interval=500):
+    fig = plt.figure()
+    patch = plt.imshow(frames[0])
+    plt.axis('off')
+    if title is None:
+        title = save_path
+    plt.title(title, fontsize=16)
+    animation = anim.FuncAnimation(
+        fig, update_scene, fargs=(frames, patch),
+        frames=len(frames), repeat=repeat, interval=interval)
+    animation.save(save_path, writer="ffmpeg", fps=20)
+    return animation
+
+
 if __name__ == "__main__":
     env = gym.make("Blackjack-v1")
     policy_pi, q_table, returns, sum_rewards_list = monte_carlo_exploring_starts(
         env, epsilon_start=1.0, epsilon_min=0.1, num_episodes=1_000_000, decay_steps=100_000, gamma=1.0, log=False
     )
+
+    env = gym.make("Blackjack-v1", render_mode="rgb_array")
+    state, info = env.reset()
+    frames = [env.render()]
+    while True:
+        action = policy_pi[state]
+        state, reward, done, truncated, info = env.step(action)
+        frames.append(env.render())
+        print(f"Action: {action} | Reward: {reward}")
+        if done or truncated:
+            break
+    env.close()
+
+    plot_animation(
+            frames, save_path=f"{'mc_blackjack'}_value_iteration.gif", 
+            title=f"{'Blackjack'} Environment", repeat=False, interval=2000
+        )
 
     plot_mean_of_last_n_rewards(sum_rewards_list, 500)
     plot_q_values(q_table)
