@@ -88,3 +88,45 @@ if __name__ == "__main__":
 
     print("Done!")
     env.close()
+
+# CLEAR EXPLANATION OF THE TAXI-V3 ENVIRONMENT FROM CHATGPT:
+"""
+> Environment: Taxi-v3
+
+>> Initial State:
+
+The taxi starts at a random location within the grid.
+The passenger starts at one of the designated pick-up locations.
+The passenger also has a randomly assigned destination (one of the four designated locations).
+
+>> Objective:
+
+The agent (taxi) must:
+Navigate to the passenger's current location.
+Pick up the passenger.
+Navigate to the passenger's desired destination.
+Drop off the passenger at the correct destination.
+The episode ends after a successful drop-off.
+Actions: The environment allows six discrete actions:
+
+0 (South): Move the taxi one cell down.
+1 (North): Move the taxi one cell up.
+2 (East): Move the taxi one cell right.
+3 (West): Move the taxi one cell left.
+4 (Pickup): Attempt to pick up the passenger.
+5 (Drop-off): Attempt to drop off the passenger.
+
+>> State Space: The state is a combination of:
+
+The taxi's position (25 possible positions in a 5x5 grid).
+The passenger's location (5 possible states: Red, Green, Yellow, Blue, or in the taxi).
+The passenger's destination (4 possible locations: Red, Green, Yellow, Blue).
+Total state space: 
+25*5*4 = 500 possible states.
+
+>> Rewards:
+
++20 for successfully dropping off the passenger at the correct location.
+-10 for attempting to pick up or drop off the passenger at the wrong location.
+-1 for each step taken, including valid moves and unsuccessful attempts to pick up or drop off the passenger. This incentivizes the agent to solve the task as quickly as possible.
+"""
