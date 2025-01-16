@@ -222,6 +222,7 @@ if __name__ == "__main__":
     plt.grid()
     plt.savefig("images/monte_policy_gradient_cartpole.png")
     plt.show()
+    plt.close()
 
     @torch.no_grad()
     def sample_action(obs):
@@ -229,4 +230,5 @@ if __name__ == "__main__":
         return int(random.random() > left_proba)
     
     show_one_episode(sample_action, save_path="images/monte_policy_gradient_cartpole.gif", repeat=False, n_max_steps=500)
+    plt.close()
     env.close()
