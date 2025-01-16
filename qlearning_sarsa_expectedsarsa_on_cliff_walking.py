@@ -81,39 +81,85 @@ def sample_action(qvals_of_state:list[float], epsilon:float):
         return qvals_of_state.index(max(qvals_of_state))
     
 
-def q_learning_update(alpha:float, gamma:float, reward:float, next_state_qvals:list[float], qvals_of_state:list[float], action:int, next_action:Optional[int]=None):
+def q_learning_update(
+    alpha:float, gamma:float, reward:float, 
+    next_state_qvals:list[float], qvals_of_state:list[float], 
+    action:int, **kwargs
+):
     qvals_of_state[action] += alpha * (reward + gamma * max(next_state_qvals) - qvals_of_state[action])
 
-def sarsa_update(alpha:float, gamma:float, reward:float, next_state_qvals:list[float], qvals_of_state:list[float], action:int, next_action:int):
+def sarsa_update(
+    alpha:float, gamma:float, reward:float, 
+    next_state_qvals:list[float], qvals_of_state:list[float], 
+    action:int, next_action:int, **kwargs
+):
     qvals_of_state[action] += alpha * (reward + gamma * next_state_qvals[next_action] - qvals_of_state[action])
 
-def expected_sarsa_update(alpha:float, gamma:float, reward:float, next_state_qvals:list[float], qvals_of_state:list[float], action:int, next_action:Optional[int]=None):
+def expected_sarsa_update(
+    alpha:float, gamma:float, reward:float, 
+    next_state_qvals:list[float], qvals_of_state:list[float], 
+    action:int, **kwargs
+):
     expected_value = sum(next_state_qvals) / len(next_state_qvals)
     qvals_of_state[action] += alpha * (reward + gamma * expected_value - qvals_of_state[action])
+
+def double_q_learning_update(
+    alpha:float, gamma:float, reward:float, 
+    next_state_qvals_1:list[float], next_state_qvals_2:list[float], 
+    qvals_of_state_1:list[float], qvals_of_state_2:list[float],
+    action:int, **kwargs
+):
+    """
+    >> Why Double Q-Learning? To avoid maximization bias
+
+    >>> consider a single state s where there are many actions a whose true values, q(s, a),
+    are all zero but whose estimated values, Q(s, a), are uncertain and thus distributed 
+    some above and some below zero. The maximum of the true values is zero, but the maximum
+    of the estimates is positive, a positive bias. We call this maximization bias.
+    """
+    if random.random() < 0.5:
+        best_next_action = next_state_qvals_1.index(max(next_state_qvals_1)) # take action from Q1 but take Q value estimate from Q2 <= for Q1 update
+        qvals_of_state_1[action] += alpha * (reward + gamma * next_state_qvals_2[best_next_action] - qvals_of_state_1[action])
+    else:
+        best_next_action = next_state_qvals_2.index(max(next_state_qvals_2)) # take action from Q2 but take Q value estimate from Q1 <= for Q2 update
+        qvals_of_state_2[action] += alpha * (reward + gamma * next_state_qvals_1[best_next_action] - qvals_of_state_2[action])
 
 
 def cliff_walking_experiment(alpha:float, gamma:float, epsilon:float, update_fn:Callable, seed:int, log:bool=False):
     random.seed(seed)
-    Q_vals = init_q_values(NUM_STATES, NUM_ACTIONS)
+    Q_vals_A = init_q_values(NUM_STATES, NUM_ACTIONS)
+    Q_vals_B = init_q_values(NUM_STATES, NUM_ACTIONS) if update_fn == double_q_learning_update else None
     sum_rewards_list = []
     for episode in range(1, NUM_EPISODES+1):
         state, info = env.reset()
         sum_rewards = 0
-        action = sample_action(Q_vals[state], epsilon=epsilon)
+        action = sample_action(Q_vals_A[state], epsilon=epsilon)
         for tstep in count(0):
             next_state, reward, done, truncated, info = env.step(action)
-            next_action = sample_action(Q_vals[next_state], epsilon=epsilon)
+            next_action = sample_action(Q_vals_A[next_state], epsilon=epsilon)
             sum_rewards += reward
 
-            update_fn(
-                alpha=alpha,
-                gamma=gamma,
-                reward=reward,
-                next_state_qvals=Q_vals[next_state],
-                qvals_of_state=Q_vals[state],
-                action=action,
-                next_action=next_action
-            )
+            if update_fn == double_q_learning_update:
+                update_fn(
+                    alpha=alpha,
+                    gamma=gamma,
+                    reward=reward,
+                    next_state_qvals_1=Q_vals_A[next_state],
+                    next_state_qvals_2=Q_vals_B[next_state],
+                    qvals_of_state_1=Q_vals_A[state],
+                    qvals_of_state_2=Q_vals_B[state],
+                    action=action
+                )
+            else:
+                update_fn(
+                    alpha=alpha,
+                    gamma=gamma,
+                    reward=reward,
+                    next_state_qvals=Q_vals_A[next_state],
+                    qvals_of_state=Q_vals_A[state],
+                    action=action,
+                    next_action=next_action
+                )
 
             if done or truncated:
                 break
@@ -126,7 +172,7 @@ def cliff_walking_experiment(alpha:float, gamma:float, epsilon:float, update_fn:
             print(
                 f"|| Episode: {episode} || Sum of Reward: {sum_rewards} || info: {info} ||"
             )
-    return sum_rewards_list, Q_vals
+    return sum_rewards_list, Q_vals_A, Q_vals_B
 
 
 # average experiment over 100 runs
@@ -159,10 +205,20 @@ def experiment(alpha:float, gamma:float, epsilon:float):
         )[0] for seed in range(100)
     ], axis=0)
 
+    print("Running Double Q-Learning")
+    avg_sum_rewards_list_double_q_learning = np.mean([
+        cliff_walking_experiment(
+            alpha=alpha, gamma=gamma, 
+            epsilon=epsilon, update_fn=double_q_learning_update,
+            seed=seed*42
+        )[0] for seed in range(100)
+    ], axis=0)
+
     print("Done!!!")
     plt.plot(avg_sum_rewards_list_q_learning, label="Q-Learning")
     plt.plot(avg_sum_rewards_list_sarsa, label="SARSA")
     plt.plot(avg_sum_rewards_list_expected_sarsa, label="Expected SARSA")
+    plt.plot(avg_sum_rewards_list_double_q_learning, label="Double Q-Learning")
     plt.ylim(-200, 0)
     plt.yticks(np.arange(-200, 0, 20).tolist() + [-13])
     plt.xlabel("Episodes")
@@ -172,6 +228,7 @@ def experiment(alpha:float, gamma:float, epsilon:float):
     plt.savefig(f"images/cliff_walking_gamma{gamma}_alpha{alpha}_epsilon{epsilon}.png")
     plt.legend()
     plt.show()
+    plt.close()
 
 
 if __name__ == "__main__":
@@ -192,21 +249,26 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.animation:
-        qlearning_sum_rewards_list, qlearning_q_vals = cliff_walking_experiment(
+        qlearning_sum_rewards_list, qlearning_q_vals, _ = cliff_walking_experiment(
             alpha=ALPHA, gamma=GAMMA, epsilon=EPSILON, update_fn=q_learning_update, seed=42
         )
 
-        sarsa_sum_rewards_list, sarsa_q_vals = cliff_walking_experiment(
+        sarsa_sum_rewards_list, sarsa_q_vals, _ = cliff_walking_experiment(
             alpha=ALPHA, gamma=GAMMA, epsilon=EPSILON, update_fn=sarsa_update, seed=42
         )
 
-        expected_sarsa_sum_rewards_list, expected_sarsa_q_vals = cliff_walking_experiment(
+        expected_sarsa_sum_rewards_list, expected_sarsa_q_vals, _ = cliff_walking_experiment(
             alpha=ALPHA, gamma=GAMMA, epsilon=EPSILON, update_fn=expected_sarsa_update, seed=42
+        )
+
+        double_qlearning_sum_rewards_list, double_qlearning_q_vals_A, double_qlearning_q_vals_B = cliff_walking_experiment(
+            alpha=ALPHA, gamma=GAMMA, epsilon=EPSILON, update_fn=double_q_learning_update, seed=42
         )
 
         plt.plot(qlearning_sum_rewards_list, label="Q-Learning")
         plt.plot(sarsa_sum_rewards_list, label="Sarsa")
         plt.plot(expected_sarsa_sum_rewards_list, label="Expected Sarsa")
+        plt.plot(double_qlearning_sum_rewards_list, label="Double Q-Learning")
         plt.ylim(-500, 0)
         plt.yticks(np.arange(-500, 0, 20).tolist() + [-13])
         plt.xlabel("Episodes")
@@ -214,15 +276,19 @@ if __name__ == "__main__":
         plt.title("Cliff Walking Experiment")
         plt.legend()
         plt.grid()
+        plt.close()
 
         print("making gif for qlearning")
-        see_cliff_walking(qlearning_q_vals, "qlearning")
+        see_cliff_walking(qlearning_q_vals, "qlearning"); plt.close()
 
         print("making gif for sarsa")
-        see_cliff_walking(sarsa_q_vals, "sarsa")
+        see_cliff_walking(sarsa_q_vals, "sarsa"); plt.close()
 
         print("making gif for expected sarsa")
-        see_cliff_walking(expected_sarsa_q_vals, "expected_sarsa")
+        see_cliff_walking(expected_sarsa_q_vals, "expected_sarsa"); plt.close()
+
+        print("making gif for double qlearning")
+        see_cliff_walking(double_qlearning_q_vals_A, "double_qlearning"); plt.close()
 
         print("Done!!! See in the images folder for the gifs")
 
