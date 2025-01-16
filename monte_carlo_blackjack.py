@@ -239,6 +239,7 @@ if __name__ == "__main__":
     policy_pi, q_table, returns, sum_rewards_list = monte_carlo_exploring_starts(
         env, epsilon_start=1.0, epsilon_min=0.1, num_episodes=1_000_000, decay_steps=100_000, gamma=1.0, log=False
     )
+    env.close() ; del env
 
     env = gym.make("Blackjack-v1", render_mode="rgb_array")
     state, info = env.reset()
@@ -253,13 +254,13 @@ if __name__ == "__main__":
     env.close()
 
     plot_animation(
-            frames, save_path=f"{'mc_blackjack'}_value_iteration.gif", 
-            title=f"{'Blackjack'} Environment", repeat=False, interval=2000
-        )
+            frames, save_path=f"images/mc_blackjack_value_iteration.gif", 
+            title=f"Blackjack Environment", repeat=False, interval=2000
+        ); plt.close()
 
-    plot_mean_of_last_n_rewards(sum_rewards_list, 500)
-    plot_q_values(q_table)
-    plot_policy_actions(policy_pi)
+    plot_mean_of_last_n_rewards(sum_rewards_list, 500); plt.close()
+    plot_q_values(q_table); plt.close()
+    plot_policy_actions(policy_pi); plt.close()
 
     
 
