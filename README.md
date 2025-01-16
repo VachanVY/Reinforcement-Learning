@@ -3,7 +3,7 @@
 > Below links don't redirect anywhere, gotta refactor the code and add links, for now go to the repo directly👆
 * [Dynamic Programming]()
   * [Policy Iteration - Policy Evaluation & Policy Iteration]()
-  * Value Iteration **(TODO)**
+  * [Value Iteration]()
 * [Monte-Carlo Methods]()
   * [Monte Carlo Exploring Starts]()
 * [Temporal-Difference (Tabular)]()
@@ -39,6 +39,7 @@
   * 20xx: AlphaFold
 
 ---
+> 👇 Not Updated... Go to the repo files directly. To see the agent act in the env, see .gif files in images folder
 
 <div style="display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap;">
   <img src="images/dqn_pong.gif" alt="DQN Pong" width="300">
