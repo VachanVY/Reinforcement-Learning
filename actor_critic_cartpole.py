@@ -175,7 +175,7 @@ def main():
             I *= config.gamma
             policy_loss.backward()
             popt.step()
-            popt.zero_grad()
+            popt.zero_grad()    
 
             if done or truncated:
                 break

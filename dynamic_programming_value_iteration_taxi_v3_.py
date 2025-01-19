@@ -84,7 +84,7 @@ if __name__ == "__main__":
     plot_animation(
         frames, save_path=f"images/{ENV_NAME}_value_iteration{args.path_postfix}.gif", 
         title=f"Value Iteration on {ENV_NAME} Environment", repeat=False, interval=2000
-    )
+    ); plt.close()
 
     print("Done!")
     env.close()

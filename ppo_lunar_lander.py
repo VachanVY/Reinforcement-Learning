@@ -337,8 +337,10 @@ if __name__ == "__main__":
     plt.tight_layout()
     plt.savefig(f"images/{ENV_NAME}_combined_plots.png")
     plt.show()
+    plt.close()
 
     torch.save(actor_critic_old, ckpt_path:=f"ckpt/ppo_{ENV_NAME}.pth")
     print("Model saved to", ckpt_path)
 
     show_one_episode(action_sampler, save_path=f"images/{ENV_NAME}.gif", repeat=False)
+    plt.close()
