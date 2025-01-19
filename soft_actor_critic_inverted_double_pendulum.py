@@ -56,16 +56,19 @@ def show_one_episode(action_sampler:tp.Callable, save_path:tp.Optional[str]=None
 class xonfig:
     num_episodes:int = 1000
     gamma:float = 0.99
-    device:torch.device = torch.device("cuda" if torch.cuda.is_available() else "cpu") # cpu good for small models
+    device:torch.device = torch.device("cuda" if False else "cpu") # cpu good for small models
 
-    alpha:float = 0.12
+    adaptive_alpha:bool = True
+    alpha:float = 0.12 # initial value
+    weight_decay:float = 0.0
+
     tau: float = 0.005
 
     buffer_size:int = 50_000
     batch_size:int = 64
     dqn_lr:float = 5e-4
     actor_lr:float = 5e-4
-    weight_decay: float = 0.0
+    alpha_lr:float = 5e-4
     
     hidden_dim:int = 64
 
@@ -136,7 +139,7 @@ def sample_actions(state:Tensor, actions_max_bound:float):
     unbound_action = dist.rsample() # (B, actions_dim) # dist.sample() is torch.no_grad() mode
     action = torch.tanh(unbound_action)*actions_max_bound # [-1, 1] * max => [-max, max]
 
-    # CHATGPT:
+    # CHATGPTed the tanh correction: TODO: Understand this
     log_prob = dist.log_prob(unbound_action) - torch.log(1 - action.pow(2) + 1e-6)  # Tanh correction
     log_prob:Tensor = log_prob.sum(dim=-1, keepdim=True)  # Sum over action dimensions
     return action, log_prob
@@ -190,6 +193,14 @@ def sac_train_step(
     policy_optimizer.zero_grad()
     dqn1.requires_grad_(True); dqn2.requires_grad_(True)
 
+    # Optimize Alpha
+    if xonfig.adaptive_alpha:
+        alpha_loss = -log_alpha * (log_prob + target_entropy).mean()
+        alpha_loss.backward()
+        alpha_optimizer.step()
+        alpha_optimizer.zero_grad()
+        xonfig.alpha = log_alpha.exp().item()
+
 
 if __name__ == "__main__":
     env = gym.make(ENV_NAME)
@@ -197,6 +208,14 @@ if __name__ == "__main__":
     ACTION_DIMS = env.action_space.shape[0] # 4
     ACTION_BOUNDS = [env.action_space.low, env.action_space.high] # [array([-1., -1., -1., -1.], dtype=float32), array([1., 1., 1., 1.], dtype=float32)]
     ACTION_BOUNDS = ACTION_BOUNDS[1][0] # 1.0
+
+    if xonfig.adaptive_alpha:
+        log_alpha = torch.nn.Parameter(
+            torch.tensor(np.log(xonfig.alpha)),
+            requires_grad=True
+        )
+        target_entropy = torch.tensor(-ACTION_DIMS, device=xonfig.device, dtype=torch.float32)
+        alpha_optimizer = torch.optim.AdamW([log_alpha], lr=xonfig.alpha_lr, weight_decay=0.0)
 
     dqn1 = CriticActionValue(STATE_DIMS, xonfig.hidden_dim, ACTION_DIMS).to(xonfig.device); dqn1.compile()
     dqn2 = deepcopy(dqn1)
@@ -254,11 +273,11 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("Training Interrupted")
 
-    
+    adaptive_str = 'adaptive_alpha' if xonfig.adaptive_alpha else ''
     show_one_episode(
         lambda x: sample_actions(torch.as_tensor(x, dtype=torch.float32, device=xonfig.device).unsqueeze(0), ACTION_BOUNDS)[0].squeeze(0).cpu().numpy(),
         save_path=f"images/sac_{ENV_NAME.lower()}_.gif",
-        title="SAC Trained Agent"
+        title=f"SAC Trained Agent {f"{adaptive_str} " if adaptive_str else ''}"
     ); plt.close()
 
 
@@ -270,6 +289,6 @@ if __name__ == "__main__":
     plt.legend()
     plt.ylabel("Sum of Rewards")
     plt.title("Sum of Rewards per Episode")
-    plt.savefig(f"images/sac_rewards_{ENV_NAME}.png")
+    plt.savefig(f"images/sac_rewards_{adaptive_str}_{ENV_NAME}.png")
     plt.show()
     plt.close()
