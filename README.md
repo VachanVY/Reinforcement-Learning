@@ -1,4 +1,47 @@
 # Reinforcement-Learning
+
+---
+
+| **Algorithms from Reinforcement Learning: An Introduction by Andrew Barto and Richard S. Sutton**                          | **Environment (Name & Goal)**               | **Environment GIF**                           | **Plots**               |
+|----------------------------------------|---------------------------------------------|-----------------------------------------------|-------------------------------------------|
+| [Policy Iteration](#policy-iteration)  | **Frozen Lake**: The player makes moves until they reach the goal or fall in a hole. The lake is slippery (unless disabled) so the player may move perpendicular to the intended direction sometimes.               | ![pol](images/frozen_lake_policy_iteration.gif)  ![pol](images/frozen_slippery_lake_policy_iteration.gif)   | - |
+| [Value Iteration](#value-iteration)    | **Taxi-v3**: The taxi starts at a random location within the grid. The passenger starts at one of the designated pick-up locations. The passenger also has a randomly assigned destination (one of the four designated locations).                | ![Gridworld](images/Taxi-v3_value_iteration.gif) ![Gridworld](images/Taxi-v3_value_iteration1.gif) ![Gridworld](images/Taxi-v3_value_iteration2.gif)     | - |
+| [Monte Carlo Exploring Starts](#monte-carlo-exploring-starts) | **Blackjack-v1**: a card game where the goal is to beat the dealer by obtaining cards that sum to closer to 21 (without going over 21) than the dealer's cards        | ![Blackjack](images/mc_blackjack_value_iteration1.gif)  | ![Graph](images/blackjack_actions.png) ![Graph](images/blackjack_qvals.png) |
+| [Sarsa](#sarsa)                        | **CliffWalking-v0**: Reach goal without falling  | ![CliffWalking](images/cliff_walking_sarsa.gif)           | ![Graph](images/cliff_walking_gamma0.99_alpha0.1_epsilon0.1.png)  Sarsa: Orange       |
+| [Q-learning](#q-learning)              | **CliffWalking-v0**: Reach goal without falling  | ![CliffWalking](images/cliff_walking_qlearning.gif)      | ![Graph](images/cliff_walking_gamma0.99_alpha0.1_epsilon0.1.png)  Q-learning: Blue    |
+| [Expected Sarsa](#expected-sarsa)      | **CliffWalking-v0**: Reach goal without falling  | ![CliffWalking](images/cliff_walking_expected_sarsa.gif)  | ![Graph](images/cliff_walking_gamma0.99_alpha0.1_epsilon0.1.png)  Expected Sarsa: Green |
+| [Double Q-learning](#double-q-learning)          | **CliffWalking-v0**: Reach goal without falling  | ![CliffWalking](images/cliff_walking_double_qlearning.gif)  | ![Graph](images/cliff_walking_gamma0.99_alpha0.1_epsilon0.1.png) Doble Q-learning: Red |
+| n-step Bootstrapping **(TODO)**        | -                                           | -                                             | -                                         |
+| Planning and Learning with Tabular Methods **(TODO)** | -                                   | -                                             | -                                         |
+| [Monte-Carlo Policy-Gradient](#monte-carlo-policy-gradient) | **CartPole-v1**: goal is to balance the pole by applying forces in the left and right direction on the cart.                 | ![CartPole](images/actor_critic_cartpole.gif)               | ![Graph](images/monte_carlo_policy_gradient_cartpole_train_graph.png)         |
+| [REINFORCE with Baseline](#reinforce-with-baseline) | **CartPole-v1**: goal is to balance the pole by applying forces in the left and right direction on the cart.                 | ![CartPole](images/to/reinforce_baseline.gif)  | - |
+| [One-Step Actor-Critic](#one-step-actor-critic) | **CartPole-v1**: goal is to balance the pole by applying forces in the left and right direction on the cart.                 | ![CartPole](images/actor_critic_cartpole.gif)        | ![Graph](images/actor_critic_cartpole_rewards.png) Very unstable may not get the same graph again, in fact may not work |
+| Policy Gradient on Continuous Actions **(TODO)** | -                                    | -                                             | -                                         |
+| On-policy Control with Approximation **(TODO)** | -                                   | -                                             | -                                         |
+| Off-policy Methods with Approximation **(TODO)** | -                                   | -                                             | -                                         |
+| Eligibility Traces **(TODO)**          | -                                           | -                                             | -                                         |
+
+
+---
+
+# Deep Reinforcement Learning: Paper Implementations
+
+| **Year** | **Paper**                                                       | **Environment (Name & Goal)**               | **Environment GIF**                           | **Plots**               |
+|----------|-----------------------------------------------------------------|---------------------------------------------|-----------------------------------------------|-------------------------|
+| 2013     | [Playing Atari with Deep Reinforcement Learning](#)             | **ALE/Pong-v5** - You control the right paddle, you compete against the left paddle controlled by the computer. You each try to keep deflecting the ball away from your goal and into your opponent’s goal.   | <img src="images/dqn_pong.gif" width="200">                 | <img src="images/loss_dqn.png" width="1000"> <img src="images/Sum_of_Reward.svg" width="1000"> <img src="images/Steps_per_Episode.svg" width="1000"> |
+| 2014     | [Deep Deterministic Policy Gradient (DDPG)](#)                  | **Pendulum-v1** - The pendulum starts in a random position and the goal is to apply torque on the free end to swing it into an upright position, with its center of gravity right above the fixed point.     | ![Pendulum](images/ddpg_pendulum.gif)                | ![Plot](images/ddpg_on_Pendulum-v1.png) |
+| 2015, 2016     | [Deep Reinforcement Learning with Double Q-Learning + Prioritized Experience Replay](#)         | -                   | ![Pong](path/to/ddqn.gif)                    | ![Plot](path/to/ddqn_plot.png) |
+| 2017     | [Proximal Policy Optimization (PPO)](#)                         | **LunarLander-v3**: This environment is a classic rocket trajectory optimization problem. According to Pontryagin’s maximum principle, it is optimal to fire the engine at full throttle or turn it off                 | ![opaos](images/lunar_lander.gif)                 | ![Plot](images/LunarLander-v3_rewards.png) |
+| 2018     | [Soft Actor-Critic (SAC)](#)                                    | - | ![fd](path/to/sac.gif)              | ![Plot](path/to/sac_plot.png) |
+| 2017     | [Mastering the Game of Go without Human Knowledge](#)           | Go - Win against self-played adversary       | ![Go](path/to/alphago.gif)                   | ![Plot](path/to/alphago_plot.png) |
+| 2017     | [AlphaZero](#)                                                  | Chess - Beat traditional engines             | ![Chess](path/to/alphazero.gif)              | ![Plot](path/to/alphazero_plot.png) |
+| 2020     | [Mastering Atari, Go, Chess and Shogi with a Learned Model](#)  | Multiple Environments (Planning with Models)| ![MuZero](path/to/muzero.gif)                | ![Plot](path/to/muzero_plot.png) |
+| 20xx     | [AlphaFold](#)                                                  | Protein Folding - Predict protein structures| ![ProteinFolding](path/to/alphafold.gif)     | ![Plot](path/to/alphafold_plot.png) |
+
+
+
+---
+
 ## Reinforcement Learning: An Introduction by Andrew Barto and Richard S. Sutton
 > Below links don't redirect anywhere, gotta refactor the code and add links, for now go to the repo directly👆
 * [Dynamic Programming]()
@@ -38,29 +81,6 @@
   * 2020: Mastering Atari, Go, chess and shogi by planning with a learned model
   * 20xx: AlphaFold
 
----
-
-| **Algorithm**                          | **Environment (Name & Goal)**               | **Environment GIF**                           | **Plots**               |
-|----------------------------------------|---------------------------------------------|-----------------------------------------------|-------------------------------------------|
-| [Policy Iteration](#policy-iteration)  | **Frozen Lake**: The player makes moves until they reach the goal or fall in a hole. The lake is slippery (unless disabled) so the player may move perpendicular to the intended direction sometimes.               | ![pol](images/frozen_lake_policy_iteration.gif)  ![pol](images/frozen_slippery_lake_policy_iteration.gif)   | - |
-| [Value Iteration](#value-iteration)    | **Taxi-v3**: The taxi starts at a random location within the grid. The passenger starts at one of the designated pick-up locations. The passenger also has a randomly assigned destination (one of the four designated locations).                | ![Gridworld](images/Taxi-v3_value_iteration.gif) ![Gridworld](images/Taxi-v3_value_iteration1.gif) ![Gridworld](images/Taxi-v3_value_iteration2.gif)     | - |
-| [Monte Carlo Exploring Starts](#monte-carlo-exploring-starts) | **Blackjack-v1**: a card game where the goal is to beat the dealer by obtaining cards that sum to closer to 21 (without going over 21) than the dealer's cards        | ![Blackjack](images/mc_blackjack_value_iteration1.gif)  | ![Graph](images/blackjack_actions.png) ![Graph](images/blackjack_qvals.png) |
-| [Sarsa](#sarsa)                        | **CliffWalking-v0**: Reach goal without falling  | ![CliffWalking](images/cliff_walking_sarsa.gif)           | ![Graph](images/cliff_walking_gamma0.99_alpha0.1_epsilon0.1.png)  Sarsa: Orange       |
-| [Q-learning](#q-learning)              | **CliffWalking-v0**: Reach goal without falling  | ![CliffWalking](images/cliff_walking_qlearning.gif)      | ![Graph](images/cliff_walking_gamma0.99_alpha0.1_epsilon0.1.png)  Q-learning: Blue    |
-| [Expected Sarsa](#expected-sarsa)      | **CliffWalking-v0**: Reach goal without falling  | ![CliffWalking](images/cliff_walking_expected_sarsa.gif)  | ![Graph](images/cliff_walking_gamma0.99_alpha0.1_epsilon0.1.png)  Expected Sarsa: Green |
-| [Double Q-learning](#double-q-learning)          | **CliffWalking-v0**: Reach goal without falling  | ![CliffWalking](images/cliff_walking_double_qlearning.gif)  | ![Graph](images/cliff_walking_gamma0.99_alpha0.1_epsilon0.1.png) Doble Q-learning: Red |
-| n-step Bootstrapping **(TODO)**        | -                                           | -                                             | -                                         |
-| Planning and Learning with Tabular Methods **(TODO)** | -                                   | -                                             | -                                         |
-| [Monte-Carlo Policy-Gradient](#monte-carlo-policy-gradient) | **CartPole-v1**: goal is to balance the pole by applying forces in the left and right direction on the cart.                 | ![CartPole](images/actor_critic_cartpole.gif)               | ![Graph](images/monte_carlo_policy_gradient_cartpole_train_graph.png)         |
-| [REINFORCE with Baseline](#reinforce-with-baseline) | **CartPole-v1**: goal is to balance the pole by applying forces in the left and right direction on the cart.                 | ![CartPole](images/to/reinforce_baseline.gif)  | - |
-| [One-Step Actor-Critic](#one-step-actor-critic) | **CartPole-v1**: goal is to balance the pole by applying forces in the left and right direction on the cart.                 | ![CartPole](images/actor_critic_cartpole.gif)        | ![Graph](images/actor_critic_cartpole_rewards.png) Very unstable may not get the same graph again, in fact may not work |
-| Policy Gradient on Continuous Actions **(TODO)** | -                                    | -                                             | -                                         |
-| On-policy Control with Approximation **(TODO)** | -                                   | -                                             | -                                         |
-| Off-policy Methods with Approximation **(TODO)** | -                                   | -                                             | -                                         |
-| Eligibility Traces **(TODO)**          | -                                           | -                                             | -                                         |
-
-
----
 
 > 👇 Not Updated... Go to the repo files directly. To see the agent act in the env, see .gif files in images folder
 
