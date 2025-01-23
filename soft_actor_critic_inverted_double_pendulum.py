@@ -56,12 +56,11 @@ def show_one_episode(action_sampler:tp.Callable, save_path:tp.Optional[str]=None
 class xonfig:
     num_episodes:int = 1000
     gamma:float = 0.99
-    device:torch.device = torch.device("cuda" if False else "cpu") # cpu good for small models
+    device:torch.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    num_updates:int = 1 # idk why but for 10 updates, result's weren't so great...
 
     adaptive_alpha:bool = True
     alpha:float = 0.12 # initial value
-    weight_decay:float = 0.0
-
     tau: float = 0.005
 
     buffer_size:int = 50_000
@@ -69,6 +68,7 @@ class xonfig:
     dqn_lr:float = 5e-4
     actor_lr:float = 5e-4
     alpha_lr:float = 5e-4
+    weight_decay:float = 0.0
     
     hidden_dim:int = 64
 
@@ -242,7 +242,7 @@ if __name__ == "__main__":
                     action = action.squeeze(0) # (action_dims,)
 
                 # action into the environment and get the next state and reward
-                next_state, reward, done, truncated, info = env.step(action.detach().numpy())
+                next_state, reward, done, truncated, info = env.step(action.cpu().detach().numpy())
                 next_state = torch.as_tensor(next_state, dtype=torch.float32, device=xonfig.device)
                 sum_rewards += reward
 
@@ -254,13 +254,14 @@ if __name__ == "__main__":
 
                 # optimize networks
                 if len(replay_buffer) >= xonfig.batch_size*5:
-                    batched_samples = random.sample(replay_buffer, xonfig.batch_size)
-                    next_states, actions, rewards, states, dones = [
-                        torch.as_tensor(np.asarray(inst), device=xonfig.device, dtype=torch.float32) for inst in list(zip(*batched_samples))
-                    ] # (B, state_dim), (B, action_dim), (B,), (B, state_dim), (B,)
-                    sac_train_step(states, actions, next_states, rewards, dones)
-                    update_ema(dqn_target1, dqn1, decay=1 - xonfig.tau)
-                    update_ema(dqn_target2, dqn2, decay=1 - xonfig.tau)
+                    for _ in range(xonfig.num_updates):
+                        batched_samples = random.sample(replay_buffer, xonfig.batch_size)
+                        next_states, actions, rewards, states, dones = [
+                            torch.as_tensor(np.asarray(inst), device=xonfig.device, dtype=torch.float32) for inst in list(zip(*batched_samples))
+                        ] # (B, state_dim), (B, action_dim), (B,), (B, state_dim), (B,)
+                        sac_train_step(states, actions, next_states, rewards, dones)
+                        update_ema(dqn_target1, dqn1, decay=1 - xonfig.tau)
+                        update_ema(dqn_target2, dqn2, decay=1 - xonfig.tau)
 
                 if done or truncated:
                     break
@@ -277,7 +278,7 @@ if __name__ == "__main__":
     show_one_episode(
         lambda x: sample_actions(torch.as_tensor(x, dtype=torch.float32, device=xonfig.device).unsqueeze(0), ACTION_BOUNDS)[0].squeeze(0).cpu().numpy(),
         save_path=f"images/sac_{ENV_NAME.lower()}_.gif",
-        title=f"SAC Trained Agent {f"{adaptive_str} " if adaptive_str else ''}"
+        title=f"SAC Trained Agent {f'{adaptive_str} ' if adaptive_str else ''}"
     ); plt.close()
 
 
