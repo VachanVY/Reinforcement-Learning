@@ -216,6 +216,9 @@ if __name__ == "__main__":
     plt.show()
     plt.close()
 
+    see_shortcut_maze(q5_values, "Dyna-Q_with_25_planning_steps.gif")
+    plt.close()
+
     print("\nWARNING: GOTTA DEBUG THE BELOW PART, CAN'T SEE THE IMPROVEMENT IN DYNA-Q+ OVER DYNA-Q\n")
 
     # Now unblock is true, env is changed to make the path to goal shorter. To see the difference between Dyna-Q and Dyna-Q+.
@@ -241,6 +244,6 @@ if __name__ == "__main__":
     plt.show()
     plt.close()
     
-    see_shortcut_maze(q_values_q, "Dyna-Q_with_25_planning_steps.gif", unblock=True)
-    see_shortcut_maze(q_values_qplus, "Dyna-Q+_with_25_planning_steps.gif", unblock=True)  
+    see_shortcut_maze(q_values_q, "Dyna-Q_with_25_planning_steps", unblock=True)
+    see_shortcut_maze(q_values_qplus, "Dyna-Q+_with_25_planning_steps", unblock=True)  
     
