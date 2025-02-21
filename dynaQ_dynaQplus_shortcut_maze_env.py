@@ -216,7 +216,7 @@ if __name__ == "__main__":
     plt.show()
     plt.close()
 
-    see_shortcut_maze(q5_values, "Dyna-Q_with_25_planning_steps.gif")
+    see_shortcut_maze(q5_values, "before_Dyna-Q_with_25_planning_steps")
     plt.close()
 
     print("\nWARNING: GOTTA DEBUG THE BELOW PART, CAN'T SEE THE IMPROVEMENT IN DYNA-Q+ OVER DYNA-Q\n")
@@ -244,6 +244,6 @@ if __name__ == "__main__":
     plt.show()
     plt.close()
     
-    see_shortcut_maze(q_values_q, "Dyna-Q_with_25_planning_steps", unblock=True)
-    see_shortcut_maze(q_values_qplus, "Dyna-Q+_with_25_planning_steps", unblock=True)  
+    see_shortcut_maze(q_values_q, "after_Dyna-Q_with_25_planning_steps", unblock=True)
+    see_shortcut_maze(q_values_qplus, "after_Dyna-Q+_with_25_planning_steps", unblock=True)  
     
