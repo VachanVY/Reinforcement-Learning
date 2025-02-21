@@ -4,10 +4,8 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as anim
 import typing as tp
 import gymnasium as gym
-from gymnasium import spaces
 from itertools import count
 import math
-from copy import deepcopy
 
 from shortcutmaze import ShortcutMazeEnv
 from typing import Optional, Callable
@@ -111,7 +109,6 @@ def see_shortcut_maze(Q_vals:dict[int, list[float]], title:str, unblock:bool=Fal
 
 def dynaQ_dynaQplus(num_planning_steps:int , dyna_q_plus:bool=False, log:bool=False, q_values=None, epsilon=EPSILON):
     plan = True if num_planning_steps>0 else False
-    title = f"Dyna-Q {'+' if dyna_q_plus else ''} with {num_planning_steps} planning steps" if plan else "No planning"
     if not plan: assert not dyna_q_plus
     q_values = init_q_vals(NUM_STATES, NUM_ACTIONS) if q_values is None else q_values
     env_model = init_env_model(NUM_STATES, NUM_ACTIONS) if plan else None
@@ -131,12 +128,6 @@ def dynaQ_dynaQplus(num_planning_steps:int , dyna_q_plus:bool=False, log:bool=Fa
                 env_model[state][action] = (reward, next_state) # (reward, next_state)
             if done or truncated:
                 break
-            # if total_step == 2999:
-            #     print("|| layout change || Taking snapshot of maze before layout change ||")
-            #     see_shortcut_maze(q_values, "|| before change layout || " + title)
-            # if total_step == 10000:
-            #     print("|| Taking snapshot of maze after layout change ||")
-            #     see_shortcut_maze(q_values, "|| after change layout || " + title)
             state = next_state
         sum_rewards_episodes.append(sum_rewards)
         timestep_episodes.append(tstep)
@@ -165,8 +156,6 @@ def dynaQ_dynaQplus(num_planning_steps:int , dyna_q_plus:bool=False, log:bool=Fa
                     planning_reward + GAMMA * max(q_values[planning_next_state]) - q_values[planning_state][planning_action]
                 )
     print("Total Steps: ", total_step)
-    # if dyna_q_plus:
-    #     print(last_visited_time_step)
     return q_values, sum_rewards_episodes, timestep_episodes
 
 if __name__ == "__main__":
