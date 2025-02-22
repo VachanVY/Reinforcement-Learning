@@ -1,5 +1,25 @@
 # Monte Carlo Tree Search (MCTS) Algorithm
-* 
+* MCTS is executed after encountering each new state to select the agent’s action for
+that state; it is executed again to select the action for the next state, and so on. As in a
+rollout algorithm, each execution is an iterative process that simulates many trajectories
+starting from the current state and running to a terminal state (or until discounting
+makes any further reward negligible as a contribution to the return). The core idea
+of MCTS is to successively focus multiple simulations starting at the current state by
+extending the initial portions of trajectories that have received high evaluations from
+earlier simulations. MCTS does not have to retain approximate value functions or policies
+from one action selection to the next, though in many implementations it retains selected
+action values likely to be useful for its next execution.
+* Monte Carlo value estimates are maintained only for the subset
+of state—action pairs that are most likely to be reached in a few steps, which form a tree
+rooted at the current state, as illustrated in Figure 8.10. MCTS incrementally extends
+the tree by adding nodes representing states that look promising based on the results
+of the simulated trajectories. Any simulated trajectory will pass through the tree and
+then exit it at some leaf node. Outside the tree and at the leaf nodes the rollout policy is
+used for action selections, but at the states inside the tree something better is possible.
+**For these states we have value estimates for at least some of the actions, so we can pick
+among them using an informed policy, called the *tree policy*, that balances exploration and exploitation.**
+![alt text](images/mcts_figure.png)
+![alt text](images/mcts_steps.png)
 
 ---
 
