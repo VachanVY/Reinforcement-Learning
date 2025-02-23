@@ -8,7 +8,7 @@ from itertools import count
 from queue import PriorityQueue
 from typing import Optional, Callable
 
-from shortcutmaze import ShortcutMazeEnv
+from custom_envs import ShortcutMazeEnv
 
 
 env = ShortcutMazeEnv(render_mode=None, layout_change_step=3000, max_episode_steps=500)

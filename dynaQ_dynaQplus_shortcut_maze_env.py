@@ -7,7 +7,7 @@ import gymnasium as gym
 from itertools import count
 import math
 
-from shortcutmaze import ShortcutMazeEnv
+from custom_envs import ShortcutMazeEnv
 from typing import Optional, Callable
 
 
@@ -222,10 +222,10 @@ if __name__ == "__main__":
         num_planning_steps=25, dyna_q_plus=True, q_values=q5_values, log=False
     )
 
-    plt.plot(moving_average(sum_rewards_episodes_q, 100)[:], label="Dyna-Q with 25 planning steps")
-    plt.plot(moving_average(sum_rewards_episodes_qplus, 100)[:], label="Dyna-Q+ with 25 planning steps")
+    plt.plot(moving_average(timestep_episodes_q, 100)[:], label="Dyna-Q with 25 planning steps")
+    plt.plot(moving_average(timestep_episodes_qplus, 100)[:], label="Dyna-Q+ with 25 planning steps")
     plt.xlabel("Episodes")
-    plt.ylabel("Smoothed Sum of Rewards")
+    plt.ylabel("Smoothed Number of Timesteps")
     plt.grid(True)
     plt.title("|| Dyna-Q vs Dyna-Q+ ||")
     plt.legend()

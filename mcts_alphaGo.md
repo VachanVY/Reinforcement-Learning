@@ -18,9 +18,17 @@ then exit it at some leaf node. Outside the tree and at the leaf nodes the rollo
 used for action selections, but at the states inside the tree something better is possible.
 **For these states we have value estimates for at least some of the actions, so we can pick
 among them using an informed policy, called the *tree policy*, that balances exploration and exploitation.**
-![alt text](images/mcts_figure.png)
-![alt text](images/mcts_steps.png)
+## Steps
+* **Selection: Starting from the root node, select the child node with highest UCB**
+* **Expansion: If the selected node has not been visited even once, then go to next state, else expand the node by adding all possible child nodes**
+* **Simulation: This Node was not even visited once so, simulate a random playout from the selected node until a terminal state is reached**
+* **Backup: Backup the value of the terminal state to previous nodes**
+* To the above till the time budget is exhausted or the number of iterations specified is reached
 
+
+![alt text](images/mcts_figure.png)\
+![alt text](images/mcts_steps.png)\
+![alt text](images/mcts_algorithm_flowchart.png)
 ---
 
 # Mastering the Game of Go with Deep Neural Networks and Tree Search
