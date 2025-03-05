@@ -24,4 +24,7 @@ to GPT-3 on certain public NLP datasets, notably SQuAD (Rajpurkar et al., 2018),
 * ![image](https://github.com/user-attachments/assets/ca4bb471-a60a-4502-b3e2-f952b0d19360)
 * ![image](https://github.com/user-attachments/assets/ffbdb266-696f-4553-a6ad-6f5f4fa2fedf)
 
-
+# Direct Preference Optimization: Your Language Model is Secretly a Reward Model
+* ![image](https://github.com/user-attachments/assets/972f5a0f-26b7-4aad-bffa-1fb0df60b346)
+* ![image](https://github.com/user-attachments/assets/0a157919-f2bb-41ba-aa26-f0d54003b50c)
+* ![image](https://github.com/user-attachments/assets/3e2739c6-8b5b-46a7-b0d2-9c41bd94a2d1)
