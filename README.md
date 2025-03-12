@@ -2,7 +2,7 @@
 
 ---
 
-## Algorithms from Reinforcement Learning: An Introduction by Andrew Barto and Richard S. Sutton**
+## Algorithms from Reinforcement Learning: An Introduction by Andrew Barto and Richard S. Sutton
 
 | **Algorithms**                          | **Environment (Name & Goal)**               | **Environment GIF**                           | **Plots**               |
 |----------------------------------------|---------------------------------------------|-----------------------------------------------|-------------------------------------------|
@@ -15,7 +15,6 @@
 | [Double Q-learning](#double-q-learning)          | **CliffWalking-v0**: Reach goal without falling  | ![CliffWalking](images/cliff_walking_double_qlearning.gif)  | ![Graph](images/cliff_walking_gamma0.99_alpha0.1_epsilon0.1.png) Double Q-learning: Red |
 | n-step Bootstrapping **(TODO)**        | -                                           | -                                             | -                                         |
 | [Dyna-Q]() | **ShortcutMazeEnv** (*custom made env*): Reach the goal dodging obstacles | ![maze0](images/shortcut_maze_before_Dyna-Q_with_25_planning_steps.gif) ![maze](images/shortcut_maze_after_Dyna-Q_with_25_planning_steps.gif) | ![compare by steps](images/dyna_q_num_planning_steps_zoomed.png)                                         | 
-| [Dyna-Q+]() ***(something wrong in DYNA-Q+, TO BE UPDATED WITH CHANGES SOON!)*** | **ShortcutMazeEnv** (*custom made env*): Reach the goal dodging obstacles | ***(something wrong in DYNA-Q+, TO BE UPDATED WITH CHANGES SOON!)*** ![maze0](images/shortcut_maze_after_Dyna-Q+_with_25_planning_steps.gif) | ![compare by steps](images/dyna_q_vs_dyna_qplus.png)                                         | 
 | [Prioritized Sweeping]() | **ShortcutMazeEnv** (*custom made env*): Reach the goal dodging obstacles | ![maze0](images/shortcut_maze_prioritized_sweeping_maze_env.gif) | ![steps](images/prioritized_sweeping_maze_env_num_training_curves.png) ![sum rewards](images/prioritized_sweeping_maze_env_sum_rewards.png)                                        | 
 | [Monte-Carlo Policy-Gradient](#monte-carlo-policy-gradient) | **CartPole-v1**: goal is to balance the pole by applying forces in the left and right direction on the cart.                 | ![CartPole](images/actor_critic_cartpole.gif)               | ![Graph](images/monte_carlo_policy_gradient_cartpole_train_graph.png)         |
 | [REINFORCE with Baseline](#reinforce-with-baseline) | **CartPole-v1**: goal is to balance the pole by applying forces in the left and right direction on the cart.                 | ![CartPole](images/to/reinforce_baseline.gif)  | - |
