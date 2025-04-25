@@ -102,7 +102,7 @@ class ActorPolicy(nn.Module):
         # [-20, 2] has been found to work well across a variety of continuous control tasks in reinforcement learning
         std = torch.clip(self.sigma_log_std(x), -20, 2).exp() # after exp bounds => (2.06e-09, 7.3890)
         return mu, std
-    
+
 
 class CriticActionValue(nn.Module):
     def __init__(self, state_dims:int, hidden_dim:int, action_dims:int):
@@ -139,11 +139,24 @@ def sample_actions(state:Tensor, actions_max_bound:float):
     unbound_action = dist.rsample() # (B, actions_dim) # dist.sample() is torch.no_grad() mode
     action = torch.tanh(unbound_action)*actions_max_bound # [-1, 1] * max => [-max, max]
 
-    # CHATGPTed the tanh correction: TODO: Understand this
-    log_prob = dist.log_prob(unbound_action) - torch.log(1 - action.pow(2) + 1e-6)  # Tanh correction
+    # Tanh correction: TODO add intuition
+    log_prob = dist.log_prob(unbound_action) - torch.log(1 - action.pow(2) + 1e-6)
+    
+    ## why sum on log prob? because dist.log_prob(a_next) is (B, action_dim) and we want to sum over action_dim to get (B, 1)
+    ## Each action dimension is independent, so the total log-prob of a joint action vector
+    ### Imagine you have two independent clocks, each ticking with its own probability. 
+    ### The chance of clock 1 showing x and clock 2 showing y is the product of their individual chances:
+    ###     p(x, y) = p1(x) * p2(y)
+    ### In log-space, that product becomes a sum:
+    ###     log p(x, y) = log p1(x) + log p2(y)
+    ### Now generalize this to a d-dimensional action vector. 
+    ### If each component of the action is sampled independently from a Gaussian distribution, 
+    ### then the joint probability of the entire action is the product of all d marginal probabilities:
+    ###     p(a) = p1(a1) * p2(a2) * ... * pd(ad)
+    ### Taking logs:
+    ###     log p(a) = log p1(a1) + log p2(a2) + ... + log pd(ad)
     log_prob:Tensor = log_prob.sum(dim=-1, keepdim=True)  # Sum over action dimensions
     return action, log_prob
-    # return action, dist
 
 
 @torch.compile()
@@ -170,8 +183,7 @@ def sac_train_step(
     with torch.no_grad():
         actions_next, log_prob = sample_actions(next_states, ACTION_BOUNDS)
         q_next1, q_next2 = dqn_target1(next_states, actions_next), dqn_target2(next_states, actions_next) # (B, 1), (B, 1)
-        # why sum on log prob? because dist.log_prob(a_next) is (B, action_dim) and we want to sum over action_dim to get (B, 1)
-        # why min of the 2 q values? To avoid maximization bias, see https://arxiv.org/abs/1812.05905
+        # why min of the two q values? To avoid maximization bias, see https://arxiv.org/abs/1812.05905
         q_next:Tensor = torch.min(q_next1, q_next2) - xonfig.alpha * log_prob # (B, 1)
         q_next_target:Tensor = rewards + xonfig.gamma * q_next * (1 - is_terminal) # (B, 1)
     
