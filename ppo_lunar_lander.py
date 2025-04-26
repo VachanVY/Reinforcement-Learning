@@ -201,7 +201,9 @@ def update():
         policy_loss = -torch.min(clipped_objective, unclipped_objective).mean() # (,)
 
         # KL Divergence
-        with torch.no_grad(): # https://github.com/DLR-RM/stable-baselines3/blob/master/stable_baselines3/ppo/ppo.py#L262-L265
+        with torch.no_grad():
+            # https://github.com/DLR-RM/stable-baselines3/blob/master/stable_baselines3/ppo/ppo.py#L262-L265
+            # http://joschu.net/blog/kl-approx.html
             log_ratios = log_ratios.detach()
             approx_kl_div = ((log_ratios.exp() - 1) - log_ratios).mean().cpu().item()
             kldivs_list.append(approx_kl_div)
@@ -221,7 +223,7 @@ def update():
     # Update old policy
     actor_critic_old.load_state_dict(actor_critic.state_dict())
     replay_buffer.clear()
-    avg_policy_loss, avg_val_loss, avg_kl_div  = avg(losses["policy"]), avg(losses["value"]), avg(kldivs_list)
+    avg_policy_loss, avg_val_loss, avg_kl_div = avg(losses["policy"]), avg(losses["value"]), avg(kldivs_list)
     return (avg_policy_loss, avg_val_loss, avg_kl_div)
 
 
