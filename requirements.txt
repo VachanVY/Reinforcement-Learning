@@ -7,3 +7,9 @@ seaborn==0.13.2
 torch==2.4.0
 tqdm==4.66.5
 tensorboard==2.19.0
+gymnasium[classic-control]
+swig
+gymnasium[box2d]
+gymnasium[mujoco]
+gymnasium[atari]
+ale-py

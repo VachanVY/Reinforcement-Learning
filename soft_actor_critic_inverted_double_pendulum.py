@@ -133,14 +133,14 @@ def update_ema(ema_model:nn.Module, model:nn.Module, decay:float):
         ema_params[name].mul_(decay).add_(param.data, alpha=1-decay)
 
 
-def sample_actions(state:Tensor, actions_max_bound:float):
-    mu, std = policy_net(state)
+def sample_actions(state:Tensor, actions_max_bound:float): # (B, state_dims)
+    mu, std = policy_net(state) # (B, action_dims), (B, action_dims)
     dist = torch.distributions.Normal(mu, std)
     unbound_action = dist.rsample() # (B, actions_dim) # dist.sample() is torch.no_grad() mode
     action = torch.tanh(unbound_action)*actions_max_bound # [-1, 1] * max => [-max, max]
 
     # Tanh correction: TODO add intuition
-    log_prob = dist.log_prob(unbound_action) - torch.log(1 - action.pow(2) + 1e-6)
+    log_prob = dist.log_prob(unbound_action) - torch.log(1 - action.pow(2) + 1e-6) # (B, action_dim)
     
     ## why sum on log prob? because dist.log_prob(a_next) is (B, action_dim) and we want to sum over action_dim to get (B, 1)
     ## Each action dimension is independent, so the total log-prob of a joint action vector
