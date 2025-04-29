@@ -59,7 +59,7 @@ class config:
     ## Training config
     log_losses:bool = False
     lr_actor:float = 3e-4
-    lr_critic:float = 1e-3
+    lr_critic:float = 3e-4
     K:int = 80
     batch_size:int = 32
     weight_decay:float = 0.0
@@ -178,47 +178,48 @@ def update():
     losses = {"policy": [], "value": []}
     kldivs_list = []
     for _ in range(config.K):
-        rand_idx = torch.randperm(config.batch_size if buf_size > config.batch_size else buf_size)
-        batch_returns = returns[rand_idx] # (B, 1)
-        batch_advantages = advantages[rand_idx] # (B, 1)
-        batch_states = buffer_states[rand_idx] # (B, state_dim)
-        batch_actions = buffer_actions[rand_idx] # (B, action_dim)
-        batch_action_logprobs = buffer_action_logprobs[rand_idx] # (B, 1)
+        for i in range(0, buf_size - config.batch_size + 1, config.batch_size):
+            batch_idx = slice(i, min(i + config.batch_size, buf_size))
+            batch_returns = returns[batch_idx] # (B, 1)
+            batch_advantages = advantages[batch_idx] # (B, 1)
+            batch_states = buffer_states[batch_idx] # (B, state_dim)
+            batch_actions = buffer_actions[batch_idx] # (B, action_dim)
+            batch_action_logprobs = buffer_action_logprobs[batch_idx] # (B, 1)
 
-        # Compute advantage
-        action_logits, state_vals = actor_critic(batch_states) # (B, action_dim), (B, 1)
-        dist = torch.distributions.Categorical(logits=action_logits)
-        action_logprobs = dist.log_prob(batch_actions) # (B, 1)
-        
-        # Value function loss
-        value_loss = nn.functional.mse_loss(state_vals, batch_returns)
+            # Compute advantage
+            action_logits, state_vals = actor_critic(batch_states) # (B, action_dim), (B, 1)
+            dist = torch.distributions.Categorical(logits=action_logits)
+            action_logprobs = dist.log_prob(batch_actions) # (B, 1)
+            
+            # Value function loss
+            value_loss = nn.functional.mse_loss(state_vals, batch_returns)
 
-        # Policy function loss
-        log_ratios = action_logprobs - batch_action_logprobs # (B, 1)
-        ratios = torch.exp(log_ratios) # (B, 1)
-        clipped_objective = torch.clip(ratios, config.clip_min, config.clip_max) * batch_advantages # (B, 1)
-        unclipped_objective = ratios * batch_advantages # (B, 1)
-        policy_loss = -torch.min(clipped_objective, unclipped_objective).mean() # (,)
+            # Policy function loss
+            log_ratios = action_logprobs - batch_action_logprobs # (B, 1)
+            ratios = torch.exp(log_ratios) # (B, 1)
+            clipped_objective = torch.clip(ratios, config.clip_min, config.clip_max) * batch_advantages # (B, 1)
+            unclipped_objective = ratios * batch_advantages # (B, 1)
+            policy_loss = -torch.min(clipped_objective, unclipped_objective).mean() # (,)
+            entropy_loss:Tensor = dist.entropy().mean() # (,)
 
-        # KL Divergence
-        with torch.no_grad():
-            # https://github.com/DLR-RM/stable-baselines3/blob/master/stable_baselines3/ppo/ppo.py#L262-L265
-            # http://joschu.net/blog/kl-approx.html
-            log_ratios = log_ratios.detach()
-            approx_kl_div = ((log_ratios.exp() - 1) - log_ratios).mean().cpu().item()
-            kldivs_list.append(approx_kl_div)
-        if approx_kl_div > config.target_kl * 1.5:
-            break
-        
-        # Optimize
-        value_loss.backward()
-        policy_loss.backward()
-        optimizer.step()
-        optimizer.zero_grad()
+            # KL Divergence
+            with torch.no_grad():
+                # https://github.com/DLR-RM/stable-baselines3/blob/master/stable_baselines3/ppo/ppo.py#L262-L265
+                # http://joschu.net/blog/kl-approx.html
+                log_ratios = log_ratios.detach()
+                approx_kl_div = ((log_ratios.exp() - 1) - log_ratios).mean().cpu().item()
+                kldivs_list.append(approx_kl_div)
+            if approx_kl_div > config.target_kl * 1.5:
+                break
+            
+            # Optimize
+            (value_loss + policy_loss + 0.00*entropy_loss).backward()
+            optimizer.step()
+            optimizer.zero_grad()
 
-        # Store losses
-        losses["policy"].append(policy_loss.item())
-        losses["value"].append(value_loss.item())
+            # Store losses
+            losses["policy"].append(policy_loss.item())
+            losses["value"].append(value_loss.item())
 
     # Update old policy
     actor_critic_old.load_state_dict(actor_critic.state_dict())
