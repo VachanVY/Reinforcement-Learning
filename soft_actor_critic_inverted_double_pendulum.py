@@ -46,7 +46,7 @@ def show_one_episode(action_sampler:tp.Callable, save_path:tp.Optional[str]=None
             sum_rewards += reward
             if done or truncated:
                 print("Sum of Rewards:", sum_rewards)
-                print("done at step", step+1)
+                print(f"{'done' if done else 'truncated'} at step", step+1)
                 break
     env.close()
     return plot_animation(frames, repeat=repeat, save_path=save_path, title=title)
@@ -54,16 +54,17 @@ def show_one_episode(action_sampler:tp.Callable, save_path:tp.Optional[str]=None
 
 @dataclass
 class xonfig:
-    num_episodes:int = 1000
+    num_episodes:int = 7000
     gamma:float = 0.99
     device:torch.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     num_updates:int = 1 # idk why but for 10 updates, result's weren't so great...
+    update_every_n_steps:int = 10
 
     adaptive_alpha:bool = True
     alpha:float = 0.12 # initial value
     tau: float = 0.005
 
-    buffer_size:int = 50_000
+    buffer_size:int = 100_000
     batch_size:int = 64
     dqn_lr:float = 5e-4
     actor_lr:float = 5e-4
@@ -189,8 +190,7 @@ def sac_train_step(
     
     dqn1_loss = nn.functional.mse_loss(dqn1(states, actions), q_next_target, reduction="mean")
     dqn2_loss = nn.functional.mse_loss(dqn2(states, actions), q_next_target, reduction="mean")
-    (dqn1_loss + dqn2_loss).backward()
-    # dqn1_loss.backward(); dqn2_loss.backward()
+    (dqn1_loss + dqn2_loss).backward() # dqn1_loss.backward(); dqn2_loss.backward()
     dqn1_optimizer.step(); dqn2_optimizer.step()
     dqn1_optimizer.zero_grad(); dqn2_optimizer.zero_grad()
 
@@ -215,6 +215,14 @@ def sac_train_step(
 
 
 if __name__ == "__main__":
+    SEED = 42
+    random.seed(SEED)
+    np.random.seed(SEED+1)
+    torch.manual_seed(SEED+2)
+    torch.use_deterministic_algorithms(mode=True, warn_only=True)
+    torch.backends.cuda.matmul.allow_tf32 = True
+    torch.backends.cudnn.allow_tf32 = True
+
     env = gym.make(ENV_NAME)
     STATE_DIMS = env.observation_space.shape[0] # 24
     ACTION_DIMS = env.action_space.shape[0] # 4
@@ -241,7 +249,7 @@ if __name__ == "__main__":
 
     replay_buffer = deque(maxlen=xonfig.buffer_size)
 
-    sum_rewards_list = []; num_timesteps_list = []
+    sum_rewards_list = []; num_timesteps_list = []; num_steps_over = int(1)
     try:
         for episode in range(1, xonfig.num_episodes+1):
             state, info = env.reset()
@@ -265,7 +273,7 @@ if __name__ == "__main__":
                 ))
 
                 # optimize networks
-                if len(replay_buffer) >= xonfig.batch_size*5:
+                if num_steps_over % xonfig.update_every_n_steps == 0 and len(replay_buffer) >= xonfig.batch_size*5:
                     for _ in range(xonfig.num_updates):
                         batched_samples = random.sample(replay_buffer, xonfig.batch_size)
                         next_states, actions, rewards, states, dones = [
@@ -279,6 +287,7 @@ if __name__ == "__main__":
                     break
 
                 state = next_state
+                num_steps_over += 1
 
             sum_rewards_list.append(sum_rewards)
             num_timesteps_list.append(tstep)
@@ -287,8 +296,16 @@ if __name__ == "__main__":
         print("Training Interrupted")
 
     adaptive_str = 'adaptive_alpha' if xonfig.adaptive_alpha else ''
+
+    def get_deterministic_actions(state:Tensor, action_bounds=ACTION_BOUNDS):
+        state = state.unsqueeze(0) # (1, state_dims)
+        mu, _ = policy_net(state)
+        action = torch.tanh(mu).mul(action_bounds)
+        action = action.squeeze(0).cpu().numpy()
+        return action
+
     show_one_episode(
-        lambda x: sample_actions(torch.as_tensor(x, dtype=torch.float32, device=xonfig.device).unsqueeze(0), ACTION_BOUNDS)[0].squeeze(0).cpu().numpy(),
+        lambda x: get_deterministic_actions(torch.as_tensor(x, dtype=torch.float32, device=xonfig.device), ACTION_BOUNDS),
         save_path=f"images/sac_{ENV_NAME.lower()}_.gif",
         title=f"SAC Trained Agent {f'{adaptive_str} ' if adaptive_str else ''}"
     ); plt.close()

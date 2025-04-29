@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import json
 import logging
 
-from ..ppo_discrete import PPO, PPOConfig
+from enigma.ppo_discrete import PPO, PPOConfig
 
 logging.basicConfig(
     filename='ppo_discrete_lunar_lander.log',   # File to write logs to

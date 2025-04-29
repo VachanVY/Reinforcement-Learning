@@ -1,0 +1,4 @@
+{"clip_range": 0.2, "clip_max": 1.2, "clip_min": 0.8, "target_kl": 0.0185615265893819, "log_losses": false, "lr_actor": 0.00015110458480791978, "lr_critic": 0.00015110458480791978, "K": 31, "batch_size": 64, "weight_decay": 0.0, "update_timestep": 700, "hidden_dim": 64, "gamma": 0.99, "max_steps": 10000000, "num_episodes": 3000, "device": 
+
+[I 2025-04-29 00:26:13,082] Trial 19 finished with value: -145.90630310390532 and parameters: 
+{'lr': 0.0001886392597345676, 'batch_size': 128, 'update_timesteps': 400, 'K': 1, 'target_kl': 0.02444449823771273}. Best is trial 16 with value: 49.63827405889766.
