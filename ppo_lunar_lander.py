@@ -58,12 +58,13 @@ class config:
 
     ## Training config
     log_losses:bool = False
-    lr_actor:float = 3e-4
-    lr_critic:float = 3e-4
-    K:int = 80
-    batch_size:int = 32
+    lr_actor:float = 2.5e-4
+    lr_critic:float = 2.5e-4
+    K:int = 4
+    batch_size:int = 64
     weight_decay:float = 0.0
-    update_timestep:int = 100
+    update_timestep:int = 2000
+    max_episodes:int = 50000
 
     # General RL config
     gamma:float = 0.99
@@ -159,7 +160,8 @@ def update():
     avg = lambda x: sum(x)/len(x)
     # Compute discounted returns and Normalize
     returns = discounted_returns(replay_buffer.rewards, replay_buffer.terminals, config.gamma).to(config.device) # (num_timesteps,)
-    returns = ((returns - returns.mean()) / (returns.std() + 1e-8)).detach().unsqueeze(-1) # (num_timesteps, 1)
+    returns = ((returns - returns.mean()) / (returns.std() + 1e-5))
+    returns = returns.detach().unsqueeze(-1) # (num_timesteps, 1)
     buf_size = len(returns)
 
     # Preprocess buffer data
@@ -172,7 +174,7 @@ def update():
     advantages = returns - buffer_state_vals # (num_timesteps, 1)
 
     # Normlaize advantages
-    advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-7) # (num_timesteps, 1)
+    # advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-5) # (num_timesteps, 1)
 
     # K Epochs
     losses = {"policy": [], "value": []}
@@ -187,20 +189,21 @@ def update():
             batch_action_logprobs = buffer_action_logprobs[batch_idx] # (B, 1)
 
             # Compute advantage
-            action_logits, state_vals = actor_critic(batch_states) # (B, action_dim), (B, 1)
-            dist = torch.distributions.Categorical(logits=action_logits)
-            action_logprobs = dist.log_prob(batch_actions) # (B, 1)
-            
-            # Value function loss
-            value_loss = nn.functional.mse_loss(state_vals, batch_returns)
+            with autocast:  # Ensure all forward passes and loss computations are inside this block
+                action_logits, state_vals = actor_critic(batch_states) # (B, action_dim), (B, 1)
+                dist = torch.distributions.Categorical(logits=action_logits)
+                action_logprobs = dist.log_prob(batch_actions) # (B, 1)
+                
+                # Value function loss
+                value_loss = nn.functional.mse_loss(state_vals, batch_returns)
 
-            # Policy function loss
-            log_ratios = action_logprobs - batch_action_logprobs # (B, 1)
-            ratios = torch.exp(log_ratios) # (B, 1)
-            clipped_objective = torch.clip(ratios, config.clip_min, config.clip_max) * batch_advantages # (B, 1)
-            unclipped_objective = ratios * batch_advantages # (B, 1)
-            policy_loss = -torch.min(clipped_objective, unclipped_objective).mean() # (,)
-            entropy_loss:Tensor = dist.entropy().mean() # (,)
+                # Policy function loss
+                log_ratios = action_logprobs - batch_action_logprobs # (B, 1)
+                ratios = torch.exp(log_ratios) # (B, 1)
+                clipped_objective = torch.clip(ratios, config.clip_min, config.clip_max) * batch_advantages # (B, 1)
+                unclipped_objective = ratios * batch_advantages # (B, 1)
+                policy_loss = -torch.min(clipped_objective, unclipped_objective).mean() # (,)
+                entropy_loss:Tensor = dist.entropy().mean() # (,)
 
             # KL Divergence
             with torch.no_grad():
@@ -209,11 +212,11 @@ def update():
                 log_ratios = log_ratios.detach()
                 approx_kl_div = ((log_ratios.exp() - 1) - log_ratios).mean().cpu().item()
                 kldivs_list.append(approx_kl_div)
-            if approx_kl_div > config.target_kl * 1.5:
-                break
+            # if approx_kl_div > config.target_kl * 1.5:
+            #     break
             
-            # Optimize
-            (value_loss + policy_loss + 0.00*entropy_loss).backward()
+            # Backpropagation and optimizer step
+            (value_loss + policy_loss - 0.00 * entropy_loss).backward()
             optimizer.step()
             optimizer.zero_grad()
 
@@ -231,7 +234,7 @@ def update():
 def train():
     try:
         sum_rewards_list = []; num_steps = int(0); avg_kl_div_list = []; episode_length_list = []
-        for episode_num in count(1):
+        for episode_num in range(1, config.max_episodes):
             state, info = env.reset()
             state = torch.as_tensor(state, device=config.device)
             sum_rewards = int(0)
@@ -254,10 +257,9 @@ def train():
                         print(f"|| Episode {episode_num} || Policy loss Avg: {avg_policy_loss:.3f} || Value loss Avg: {avg_val_loss:.3f} || KL Div Avg: {avg_kl_div:.4f} ||")
 
                 if terminal or truncated:
-                    break
-
-                if num_steps > config.max_steps:
-                    return sum_rewards_list, avg_kl_div_list
+                    if num_steps > config.max_steps or np.mean(sum_rewards_list[-100:])>=230:
+                        return sum_rewards_list, avg_kl_div_list, episode_length_list
+                    break                
                 
                 # Update state
                 state = torch.as_tensor(next_state, device=config.device)
@@ -294,8 +296,13 @@ if __name__ == "__main__":
     NUM_ACTIONS = env.action_space.n
     NUM_STATES = env.observation_space.shape[0]
 
+    autocast = torch.autocast(
+        device_type=config.device.type, 
+        dtype=config.dtype, 
+        enabled=config.dtype != torch.float32
+    )
     actor_critic = ActorCritic(NUM_STATES, NUM_ACTIONS)
-    actor_critic.to(config.device); # actor_critic.compile()
+    actor_critic.to(config.device); actor_critic.compile()
     optimizer = torch.optim.AdamW([
         {"params": actor_critic.policy.parameters(), "lr": config.lr_actor},
         {"params": actor_critic.value.parameters(), "lr": config.lr_critic}
@@ -303,7 +310,7 @@ if __name__ == "__main__":
     optimizer.zero_grad()
 
     actor_critic_old = ActorCritic(NUM_STATES, NUM_ACTIONS)
-    actor_critic_old.to(config.device); # actor_critic_old.compile()
+    actor_critic_old.to(config.device); actor_critic_old.compile()
     # actor_critic_old.requires_grad_(False)
     actor_critic_old.load_state_dict(actor_critic.state_dict())
 
