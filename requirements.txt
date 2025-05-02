@@ -1,4 +1,4 @@
-ale_py==0.10.1
+ale_py==0.11.0
 gymnasium==1.0.0
 matplotlib==3.10.0
 numpy==2.2.2
@@ -12,4 +12,3 @@ swig
 gymnasium[box2d]
 gymnasium[mujoco]
 gymnasium[atari]
-ale-py
