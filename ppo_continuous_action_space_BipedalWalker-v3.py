@@ -60,10 +60,10 @@ def show_one_episode(
 
 
 def make_env(env:gym.Env, seed, capture_video, transform_env:bool):
+    if capture_video:
+        env = gym.wrappers.RecordVideo(env, f"{time.time()}_{ENV_NAME}")
     if transform_env:
         env = gym.wrappers.RecordEpisodeStatistics(env)
-        if capture_video:
-            env = gym.wrappers.RecordVideo(env, f"{time.time()}_{ENV_NAME}")
         env = gym.wrappers.ClipAction(env)
         env = gym.wrappers.NormalizeObservation(env)
         env = gym.wrappers.TransformObservation(env, lambda obs: np.clip(obs, *ACTION_BOUNDS), None)
@@ -76,7 +76,7 @@ def make_env(env:gym.Env, seed, capture_video, transform_env:bool):
 
 @dc.dataclass
 class Xonfig:
-    max_steps:int = int(3.5e5)
+    max_steps:int|float = int(3.5e5)
 
     # General RL hyperparameters
     num_episodes:int = 1000
@@ -89,17 +89,17 @@ class Xonfig:
     val_coeff:float = 1.0
     entropy_coeff:float = 0.0
 
-    save_model_every:int = -1 # Default to -1, calculate later if needed
+    save_model_every:int = int(num_episodes // 4) if num_episodes > 0 else int(max_steps // 4)
 
     # Action noise hyperparameters
     init_action_std:float = 0.5
     action_std_decay_rate:float = 0.0
     min_action_std:float = 0.1
-    decay_std_every:int = -1 # Default to -1, calculate later if needed
+    decay_std_every:int = int(max_steps / 12) if max_steps > 0 else -1
 
     # General Training hyperparameters
-    device_str: str = "cuda" if torch.cuda.is_available() else "cpu"
-    dtype_str: str = "bfloat16" if (device_str == "cuda" and torch.cuda.is_bf16_supported()) else "float32"
+    device:torch.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    dtype:torch.dtype = torch.bfloat16 if (device.type == "cuda" and torch.cuda.is_bf16_supported()) else torch.float32
     batch_size:int = 64
     weight_decay:float = 0e-4
     actor_lr:float = 3e-4
@@ -117,76 +117,37 @@ class Xonfig:
     seed: int = 42
     transform_env: bool = False
     capture_video: bool = False
-    run_name: str = "ppo_run"
+    run_name: str = ""
 
-    def __post_init__(self):
-        parser = argparse.ArgumentParser(description="PPO Training Configuration")
+    def parse_args(self):
+        parser = argparse.ArgumentParser(description="PPO Continuous Action Space")
+        parser.add_argument("--seed", type=int, default=self.seed, help="Random seed")
+        parser.add_argument("--capture_video", default=self.capture_video, action="store_true", help="Capture video of the agent")
+        parser.add_argument("--transform_env", default=self.transform_env, action="store_true", help="Transform the environment")
 
-        # Dynamically add arguments based on dataclass fields
-        for field in dc.fields(self):
-            field_name = field.name
-            field_type = field.type
-            default_value = getattr(self, field_name) # Get default from instance
+        parser.add_argument("--clip_norm", type=float, default=self.clip_norm, help="Gradient clipping norm")
+        parser.add_argument("--val_coeff", type=float, default=self.val_coeff, help="Value function coefficient")
+        parser.add_argument("--entropy_coeff", type=float, default=self.entropy_coeff, help="Entropy coefficient")
+        parser.add_argument("--actor_lr", type=float, default=self.actor_lr, help="Actor learning rate")
+        parser.add_argument("--critic_lr", type=float, default=self.critic_lr, help="Critic learning rate")
+        parser.add_argument("--K", type=int, default=self.K, help="Number of PPO iterations")
+        parser.add_argument("--action_std_decay_rate", type=float, default=self.action_std_decay_rate, help="Action std decay rate")
 
-            # Handle Optional types
-            if isinstance(field_type, tp._GenericAlias) and field_type.__origin__ is tp.Union and type(None) in field_type.__args__:
-                # Extract the non-None type
-                field_type = next(t for t in field_type.__args__ if t is not type(None))
-
-            # Handle boolean flags
-            if field_type == bool:
-                # Use store_true/store_false based on default
-                if default_value:
-                    parser.add_argument(f"--no-{field_name.replace('_', '-')}",
-                                        action="store_false",
-                                        dest=field_name, # Store in the correct attribute
-                                        help=f"Disable {field_name}")
-                else:
-                    parser.add_argument(f"--{field_name.replace('_', '-')}",
-                                        action="store_true",
-                                        dest=field_name, # Store in the correct attribute
-                                        help=f"Enable {field_name}")
-                # Set default explicitly for argparse help message (action='store_true'/'store_false' handles the logic)
-                parser.set_defaults(**{field_name: default_value})
-            elif field_name in ["device_str", "dtype_str"]: # Handle device/dtype strings
-                parser.add_argument(f"--{field_name.replace('_', '-')}", type=str, default=default_value,
-                                    help=f"{field_name} (default: {default_value})")
-            else:
-                parser.add_argument(f"--{field_name.replace('_', '-')}", type=field_type, default=default_value,
-                                    help=f"{field_name} (default: {default_value})")
+        parser.add_argument("--num_episodes", type=int, default=self.num_episodes, help="Number of episodes to train")
+        parser.add_argument("--max_steps", type=int, default=self.max_steps, help="Maximum number of steps to train")
 
         args = parser.parse_args()
+        for key, value in vars(args).items():
+            if hasattr(self, key):
+                if self.__dict__[key] != value:
+                    print(f"Overriding {key} from {self.__dict__[key]} to {value}")
+                    self.run_name += f"_{key}_{value}"
+                setattr(self, key, value)
+            else:
+                print(f"Warning: {key} is not a valid argument for Xonfig. Ignoring it.")
+        if self.num_episodes > 0:
+            self.max_steps = float("inf")
 
-        # Update dataclass instance with parsed arguments
-        for field in dc.fields(self):
-            if hasattr(args, field.name):
-                setattr(self, field.name, getattr(args, field.name))
-
-        # --- Post-parsing calculations and setup ---
-        # Handle conditional defaults after parsing CLI args
-        if self.num_episodes > 0 and args.max_steps == dc.fields(self).max_steps.default: # Only override if max_steps wasn't set via CLI
-            self.max_steps = self.num_episodes * 1600
-
-        if self.save_model_every == -1: # Calculate if not set by user
-            self.save_model_every = int(self.num_episodes // 4) if self.num_episodes > 0 else int(self.max_steps // 4)
-
-        if self.decay_std_every == -1: # Calculate if not set by user
-            self.decay_std_every = int(self.max_steps / 12) if self.max_steps > 0 else -1 # Avoid division by zero if max_steps is 0
-
-        # Handle device and dtype conversion
-        self.device = torch.device(self.device_str)
-        dtype_map = {"float32": torch.float32, "bfloat16": torch.bfloat16, "float16": torch.float16}
-        self.dtype = dtype_map.get(self.dtype_str, torch.float32)
-        if self.dtype == torch.bfloat16 and not (self.device.type == "cuda" and torch.cuda.is_bf16_supported()):
-            print(f"Warning: bfloat16 requested but not supported on {self.device}. Falling back to float32.")
-            self.dtype = torch.float32
-            self.dtype_str = "float32"
-
-        # Print info messages after parsing
-        if self.action_std_decay_rate == 0:
-            print(f"Action std decay rate is 0, action std will remain constant -- {self.init_action_std}")
-        if self.transform_env:
-            print("Transforming environment based on config.")
 
 class RolloutBuffer:
     def __init__(self):
@@ -321,7 +282,7 @@ def update(total_steps_done:int):
 
     # K Epochs
     losses = {"policy": [], "value": []}
-    kldivs_list = []
+    kldivs_list = []; norm:tp.Optional[Tensor] = None
     for _ in range(xonfig.K):
         for i in range(0, buf_size - xonfig.batch_size + 1, xonfig.batch_size):
             batch_idx = slice(i, min(i + xonfig.batch_size, buf_size))
@@ -361,7 +322,6 @@ def update(total_steps_done:int):
                     approx_kl_div = ((log_ratios.exp() - 1) - log_ratios).mean().cpu().item()
                     kldivs_list.append(approx_kl_div)
 
-                norm:tp.Optional[Tensor] = None
                 if xonfig.target_kl is not None and approx_kl_div > xonfig.target_kl * 1.5:
                     break
 
@@ -379,9 +339,6 @@ def update(total_steps_done:int):
             losses["value"].append(value_loss.cpu().item())
             
     if xonfig.logg_tb:
-        writer.add_scalar(
-            "losses/entropy_loss", entropy_loss.cpu().item(), total_steps_done
-        )
         if norm is not None:
             writer.add_scalar("losses/grad_norm", norm.cpu().item(), total_steps_done)
     
@@ -460,7 +417,7 @@ def train():
                             writer.close()
                         torch.save(
                             obj=actor_critic.state_dict(),
-                            f=f"ckpt/PPO_Continuous_Actions_{ENV_NAME}_final.ptc"
+                            f=f"ckpt/PPO_Continuous_Actions_{ENV_NAME}_final{xonfig.run_name}.ptc"
                         )
                         return sum_rewards_list, episode_length_list, avg_kl_div_list
                     break
@@ -473,7 +430,7 @@ def train():
             if episode_num % xonfig.save_model_every == 0:
                 torch.save(
                     obj=actor_critic.state_dict(),
-                    f=f"ckpt/PPO_Continuous_Actions_{ENV_NAME}_{num_steps}.ptc"
+                    f=f"ckpt/PPO_Continuous_Actions_{ENV_NAME}_{num_steps}{xonfig.run_name}.ptc"
                 )
             sum_rewards_list.append(sum_rewards)
             episode_length_list.append(tstep)
@@ -503,12 +460,14 @@ if __name__ == "__main__":
     torch.backends.cudnn.allow_tf32 = True
 
     xonfig = Xonfig()
-    print(xonfig)
+    print("Default Args:", xonfig, sep="\n")
+    xonfig.parse_args()
+    print("Parsed Args:", xonfig, sep="\n")
 
     ENV_NAME = xonfig.env_name
     TRANSFORM_ENV = xonfig.transform_env
     if xonfig.capture_video:
-        os.makedirs(f"videos/{ENV_NAME}", exist_ok=True)
+        os.makedirs(f"videos/{ENV_NAME}{xonfig.run_name}", exist_ok=True)
 
     raw_env = gym.make(ENV_NAME, render_mode="rgb_array")
 
@@ -557,7 +516,7 @@ if __name__ == "__main__":
     if xonfig.logg_tb:
         writer = SummaryWriter(
             log_dir=f"runs/PPO_{ENV_NAME}",
-            filename_suffix=f"_{int(time.time())}"
+            filename_suffix=f"{xonfig.run_name}"
         )
         writer.add_text(
             "Training Configuration",
@@ -570,14 +529,14 @@ if __name__ == "__main__":
         env,
         lambda x: \
             actor_critic_old.sample_action(torch.tensor(x, device=xonfig.device).float(), deterministic=False)[0].cpu().numpy(),
-        save_path=f"images/PPO_Continuous_Actions_{ENV_NAME}.gif"
+        save_path=f"images/PPO_Continuous_Actions_{ENV_NAME}{xonfig.run_name}.gif"
     ); plt.close()
 
     show_one_episode(
         env,
         lambda x: \
             actor_critic_old.sample_action(torch.tensor(x, device=xonfig.device).float(), deterministic=True)[0].cpu().numpy(),
-        save_path=f"images/PPO_Continuous_Actions_{ENV_NAME}_deterministic.gif"
+        save_path=f"images/PPO_Continuous_Actions_{ENV_NAME}{xonfig.run_name}_deterministic.gif"
     ); plt.close()
 
     def moving_average(x, w): return np.convolve(x, np.ones(w)/w, mode='valid')
@@ -614,5 +573,5 @@ if __name__ == "__main__":
 
     plt.tight_layout()
     plt.show()
-    plt.savefig(f"images/PPO_Continuous_Actions_{ENV_NAME}_training_curves.png")
+    plt.savefig(f"images/PPO_Cont_Actions_{ENV_NAME}{xonfig.run_name}_training_curves.png")
     plt.close(fig)
