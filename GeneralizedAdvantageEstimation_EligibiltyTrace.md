@@ -15,6 +15,7 @@ discount factor used in discounted formulations of MDPs, but we treat it as a va
 parameter in an undiscounted problem 
 * ![image](https://github.com/user-attachments/assets/ffa75b79-6e0a-4f24-9855-77cb8b068b8c)
 * ![image](https://github.com/user-attachments/assets/4ae88482-633d-4c57-9ac9-66a06daa0ec9)
+* $$A^{GAE}_t = \sum_{i=1}\gamma^{i-1}\lambda^{i-1}\delta_{t+i-1}$$
 * ![image](https://github.com/user-attachments/assets/0006ad97-79dc-418d-bfc6-510d43c95039)
 
 ## Eligibilty Traces

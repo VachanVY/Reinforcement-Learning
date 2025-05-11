@@ -54,7 +54,7 @@ class config:
     clip_range:float = 0.2
     clip_max:float = 1 + clip_range
     clip_min:float = 1 - clip_range
-    target_kl:float = 0.01 # Usually 0.01 or 0.05
+    target_kl:tp.Optional[float] = None # None OR Usually 0.01 or 0.05
 
     ## Training config
     log_losses:bool = False
@@ -212,8 +212,8 @@ def update():
                 log_ratios = log_ratios.detach()
                 approx_kl_div = ((log_ratios.exp() - 1) - log_ratios).mean().cpu().item()
                 kldivs_list.append(approx_kl_div)
-            # if approx_kl_div > config.target_kl * 1.5:
-            #     break
+            if config.target_kl is not None and approx_kl_div > config.target_kl * 1.5:
+                break
             
             # Backpropagation and optimizer step
             (value_loss + policy_loss - 0.00 * entropy_loss).backward()
