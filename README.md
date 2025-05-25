@@ -40,7 +40,9 @@
 | 2020     | [Mastering Atari, Go, Chess and Shogi with a Learned Model](#)  | Multiple Environments (Planning with Models)| -                | ! -   |
 | 20xx     | [AlphaFold](#)                                                  | Protein Folding - Predict protein structures| -     | -   | -->
 
+## Star History
 
+[![Star History Chart](https://api.star-history.com/svg?repos=VachanVY/Reinforcement-Learning&type=Date)](https://www.star-history.com/#VachanVY/Reinforcement-Learning&Date)
 
 ---
 
@@ -68,6 +70,7 @@
   * [REINFORCE with Baseline]()
   * [One-Step Actor-Critic]()
   * Policy Gradient on Continuous Actions (**TODO**)
+
 
 ---
 ## Reinforcement Learning: Paper Implementations
