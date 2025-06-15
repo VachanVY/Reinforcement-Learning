@@ -81,3 +81,18 @@ others are updated once. To converge correctly, however, an asynchronous algorit
 must continue to update the values of all the states: it can’t ignore any state after some
 point in the computation. Asynchronous DP algorithms allow great flexibility in selecting
 states to update.
+
+## Monte Carlo Methods
+* ![image](https://github.com/user-attachments/assets/7e36863b-6f06-4cd9-94c3-acd09d5815c2)
+* ![image](https://github.com/user-attachments/assets/113bd28a-9eea-451e-968c-c8e6d5eaeff4)
+* Monte Carlo Estimation of Action Value: If a model is not available, then it is particularly useful to estimate action values (the values of state–action pairs) rather than state values
+* For policy evaluation to work for action
+values, we must assure continual exploration. One way to do this is by specifying that
+the episodes start in a state–action pair, and that every pair has a nonzero probability of
+being selected as the start. This guarantees that all state–action pairs will be visited an
+infinite number of times in the limit of an infinite number of episodes. We call this the
+assumption of exploring starts. Keep non-zero probs policy for good exploration 
+* ![image](https://github.com/user-attachments/assets/d5d395a0-1b3e-4342-9d72-771b9f11eb4a)
+* ![image](https://github.com/user-attachments/assets/84bb5af0-af1c-4c6e-99c8-3b55d725c7f3)
+* 
+
