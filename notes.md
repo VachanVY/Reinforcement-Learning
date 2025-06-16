@@ -91,8 +91,24 @@ values, we must assure continual exploration. One way to do this is by specifyin
 the episodes start in a state–action pair, and that every pair has a nonzero probability of
 being selected as the start. This guarantees that all state–action pairs will be visited an
 infinite number of times in the limit of an infinite number of episodes. We call this the
-assumption of exploring starts. Keep non-zero probs policy for good exploration 
+assumption of exploring starts. Keep non-zero probs policy for good exploration
+### On-Policy
 * ![image](https://github.com/user-attachments/assets/d5d395a0-1b3e-4342-9d72-771b9f11eb4a)
 * ![image](https://github.com/user-attachments/assets/84bb5af0-af1c-4c6e-99c8-3b55d725c7f3)
-* 
+## Off-Policy via Importance sampling
+* ![image](https://github.com/user-attachments/assets/b7711099-aad3-48fe-b043-81441fb5ed07)
+* ![image](https://github.com/user-attachments/assets/870d839c-bab7-418c-a913-c377a0c99d2f)
+* ![WhatsApp Image 2025-06-16 at 09 04 28_31f5895e](https://github.com/user-attachments/assets/effa2b11-426a-41c1-a89a-5e8f954817db)
+* ![WhatsApp Image 2025-06-16 at 09 05 00_00a84827](https://github.com/user-attachments/assets/c29a875e-85b1-4cd0-ae67-4d4d269666ee)
+* ![image](https://github.com/user-attachments/assets/92879797-52b2-4425-a389-38f0cdde28d0)
+* ![image](https://github.com/user-attachments/assets/f4c3fbd4-f7f6-4c9b-b8b2-96836c7406fb)
 
+## Temporal-Difference Learning
+* ![image](https://github.com/user-attachments/assets/1dc6b572-cbda-4c7d-b507-fa1a4d1c4534)
+* ![image](https://github.com/user-attachments/assets/4a7596aa-7316-40cc-84f8-743d3808ba32)
+* ![image](https://github.com/user-attachments/assets/82aeb3ca-a69a-4e5c-8c16-d125a47d5f67)
+* ![image](https://github.com/user-attachments/assets/c9fdb18f-6b2f-4253-b30c-8a59984f5543)
+* ![image](https://github.com/user-attachments/assets/5525a554-e503-4b93-b636-b24c47bbe874)
+* ![image](https://github.com/user-attachments/assets/325b8c8f-e2f7-4d4f-a127-682a558cdb4d)
+* ![image](https://github.com/user-attachments/assets/d0efbabe-13e7-4aa8-8b1a-8f3cfb0ebf2c)
+* ![image](https://github.com/user-attachments/assets/ee107f91-07e1-4a64-92a9-717de451672e)
