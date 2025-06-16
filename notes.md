@@ -112,3 +112,24 @@ assumption of exploring starts. Keep non-zero probs policy for good exploration
 * ![image](https://github.com/user-attachments/assets/325b8c8f-e2f7-4d4f-a127-682a558cdb4d)
 * ![image](https://github.com/user-attachments/assets/d0efbabe-13e7-4aa8-8b1a-8f3cfb0ebf2c)
 * ![image](https://github.com/user-attachments/assets/ee107f91-07e1-4a64-92a9-717de451672e)
+```python
+  def double_q_learning_update(
+    alpha:float, gamma:float, reward:float, 
+    next_state_qvals_1:list[float], next_state_qvals_2:list[float], 
+    qvals_of_state_1:list[float], qvals_of_state_2:list[float],
+    action:int, **kwargs
+):
+
+    # >> Why Double Q-Learning? To avoid maximization bias
+    # >>> consider a single state s where there are many actions a whose true values, q(s, a),
+    # are all zero but whose estimated values, Q(s, a), are uncertain and thus distributed 
+    # some above and some below zero. The maximum of the true values is zero, but the maximum
+    # of the estimates is positive, a positive bias. We call this maximization bias.
+    if random.random() < 0.5:
+        best_next_action = next_state_qvals_1.index(max(next_state_qvals_1)) # take action from Q1 but take Q value estimate from Q2 <= for Q1 update
+        qvals_of_state_1[action] += alpha * (reward + gamma * next_state_qvals_2[best_next_action] - qvals_of_state_1[action])
+    else:
+        best_next_action = next_state_qvals_2.index(max(next_state_qvals_2)) # take action from Q2 but take Q value estimate from Q1 <= for Q2 update
+        qvals_of_state_2[action] += alpha * (reward + gamma * next_state_qvals_1[best_next_action] - qvals_of_state_2[action])
+  ```
+* While sampling actions for Double Q-learning, remember to sample it from Q1 + Q2 function
