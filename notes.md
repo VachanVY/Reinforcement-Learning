@@ -133,3 +133,29 @@ assumption of exploring starts. Keep non-zero probs policy for good exploration
         qvals_of_state_2[action] += alpha * (reward + gamma * next_state_qvals_1[best_next_action] - qvals_of_state_2[action])
   ```
 * While sampling actions for Double Q-learning, remember to sample it from Q1 + Q2 function
+
+## Policy Gradient Methods
+<!--
+* ![image](https://github.com/user-attachments/assets/878f53ae-ffc6-42c2-bd76-9c0bb23b7810)
+* ![image](https://github.com/user-attachments/assets/31dcdbeb-628c-4573-8882-88058d0cff12)
+* ![image](https://github.com/user-attachments/assets/6796b6c8-5ca8-4307-bb48-4a6fd0e61c2b)
+-->
+* ![WhatsApp Image 2025-06-17 at 13 44 46_5f41ba88](https://github.com/user-attachments/assets/e8acb350-be46-43f1-8851-40617c1d7299)
+* ![WhatsApp Image 2025-06-17 at 13 45 19_e75d0b84](https://github.com/user-attachments/assets/f6a6bc29-9c45-401f-a602-93fa728ca6ad)
+* ![WhatsApp Image 2025-06-17 at 13 45 37_e764d135](https://github.com/user-attachments/assets/2cd1e53b-e51f-4c80-ade1-90d34f52e8de)
+* ![WhatsApp Image 2025-06-17 at 13 45 58_e65623ab](https://github.com/user-attachments/assets/4c2231b1-2992-47ea-8e0b-94cba086a9d5)
+* ![image](https://github.com/user-attachments/assets/d4514450-ee68-4659-a665-1a7acf626043)
+* ![image](https://github.com/user-attachments/assets/d0e8fd80-297b-41bc-a981-c1e67725a54a)
+* ![image](https://github.com/user-attachments/assets/411ad142-8147-49d5-91f0-b1b1a86b6475)
+* ![image](https://github.com/user-attachments/assets/4f66b085-a334-4ac0-9ff3-64335a59966b)
+  Although the REINFORCE-with-baseline method learns both a policy and a state-value
+function, we do not consider it to be an actor–critic method because its state-value function
+is used only as a baseline, not as a critic. That is, it is not used for bootstrapping (updating
+the value estimate for a state from the estimated values of subsequent states), but only
+as a baseline for the state whose estimate is being updated. This is a useful distinction,
+for only through bootstrapping do we introduce bias and an asymptotic dependence
+on the quality of the function approximation.
+* ![image](https://github.com/user-attachments/assets/3af07b8b-ed34-466f-a0ff-a073f39e0686)
+* ![image](https://github.com/user-attachments/assets/88880cab-29f0-4b00-bd44-71e99f3f2d23)
+* ![image](https://github.com/user-attachments/assets/02bba5b0-e081-43a4-8c3f-d5af5ac31186)
+
