@@ -161,6 +161,12 @@ on the quality of the function approximation.
 
 # Deep Reinforcement Learning
 ## Proximal Policy Optimization (PPO)
+In Reinforcement Learning, the term is want to maximize is:
+
+![image](https://github.com/user-attachments/assets/ce821355-ce73-4873-bc49-c732d382df8e)
+
+PPO Loss explanation:
+
 $$L^{\text{CLIP}}(\theta) = \mathbb{E}_t \left[ \min \left( r_t(\theta) \hat{A}_t,\ \text{clip}(r_t(\theta), 1 - \epsilon, 1 + \epsilon) \hat{A}_t \right) \right]$$
 
 Where:
