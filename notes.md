@@ -159,3 +159,54 @@ on the quality of the function approximation.
 * ![image](https://github.com/user-attachments/assets/88880cab-29f0-4b00-bd44-71e99f3f2d23)
 * ![image](https://github.com/user-attachments/assets/02bba5b0-e081-43a4-8c3f-d5af5ac31186)
 
+# Deep Reinforcement Learning
+## Proximal Policy Optimization (PPO)
+$$L^{\text{CLIP}}(\theta) = \mathbb{E}_t \left[ \min \left( r_t(\theta) \hat{A}_t,\ \text{clip}(r_t(\theta), 1 - \epsilon, 1 + \epsilon) \hat{A}_t \right) \right]$$
+
+Where:
+
+$$r_t = \frac{\pi_{\theta}(a_t|s_t)}{\pi_{\theta_{\text{old}}}(a_t|s_t)}$$
+
+
+
+If **$r_t > 0$**: $\pi_\theta$ is more confident about action $a_t$ than $\pi_{\text{old}}$.
+We want this confidence to increase — but not so much that it shoots off.
+
+If **$r_t < 0$**: $\pi_\theta$ is more confident about action $a_t$ than $\pi_{\text{old}}$.
+We want this confidence to decrease — not so much that it shoots off.
+
+
+Expanded form:
+
+$$
+L^{\text{CLIP}}(\theta) =
+\begin{cases}
+r_t * \hat{A}_t & \text{if } r_t < 1 - \epsilon \\
+r_t * \hat{A}_t & \text{if } 1 - \epsilon \le r_t \le 1 + \epsilon \\
+\text{clip}(r_t, 1 - \epsilon, 1 + \epsilon) * \hat{A}_t & \text{if } r_t > 1 + \epsilon
+\end{cases}
+\quad \text{for } \hat{A}_t > 0
+$$
+
+$$
+L^{\text{CLIP}}(\theta) =
+\begin{cases}
+\text{clip}(r_t, 1 - \epsilon, 1 + \epsilon) * \hat{A}_t & \text{if } r_t < 1 - \epsilon \\
+r_t * \hat{A}_t & \text{if } 1 - \epsilon \le r_t \le 1 + \epsilon \\
+r_t * \hat{A}_t & \text{if } r_t > 1 + \epsilon
+\end{cases}
+\quad \text{for } \hat{A}_t < 0
+$$
+
+---
+
+**When $\hat{A}_t > 0$:**  
+Action is selected from $\pi_{\text{old}}$. **$\hat{A}_t$** validates that the action is good.  
+We want to incorporate that more into $\pi_\theta$, but not let it rise too much — so we clip the **upper bound**.
+
+**When $\hat{A}_t < 0$:**  
+Action is selected from $\pi_{\text{old}}$. **$\hat{A}_t$** tells us that the action is not good.  
+We want to incorporate that into $\pi_\theta$, but not let it decrease too much — so we clip the **lower bound**.
+
+## Deep Deterministic Policy Gradient (DDPG)
+![WhatsApp Image 2025-06-20 at 23 27 53_46a142bb](https://github.com/user-attachments/assets/e1f0c4a0-c0aa-4ddb-82c1-afdd15a1b8b0)
