@@ -220,13 +220,6 @@ def ppo_update(total_steps_done:int):
 
     buf_states = torch.stack(buffer.states).to(xonfig.device).detach() # (B, state_dim)
     buf_actions = torch.stack(buffer.actions).to(xonfig.device).detach() # (B, num_actions)
-
-    # buf_returns = torch.tensor(
-    #     get_discounted_returns(buffer.rewards, buffer.dones, xonfig.gamma),
-    #     device=xonfig.device
-    # ).unsqueeze(-1).detach()
-    # if buf_size > 1:
-    #     buf_returns = ((buf_returns - buf_returns.mean()) / (buf_returns.std() + 1e-6)).detach()
     
     buf_action_logproba = torch.stack(buffer.log_probs).to(xonfig.device).detach() # (B, 1)
 
