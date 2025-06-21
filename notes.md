@@ -216,3 +216,17 @@ We want to incorporate that into $\pi_\theta$, but not let it decrease too much 
 
 ## Deep Deterministic Policy Gradient (DDPG)
 ![WhatsApp Image 2025-06-20 at 23 27 53_46a142bb](https://github.com/user-attachments/assets/e1f0c4a0-c0aa-4ddb-82c1-afdd15a1b8b0)
+
+## Soft Actor Critic (SAC)
+* ![image](https://github.com/user-attachments/assets/b2cd1d8f-7a90-4c32-b0da-23657b9ff106)
+* ![WhatsApp Image 2025-06-21 at 12 27 40_8afb54b5](https://github.com/user-attachments/assets/8946218f-9875-4244-abb0-69c882d54e2b)
+* ![image](https://github.com/user-attachments/assets/fac3a628-52dc-442a-b276-cfedca96b332)
+* ![WhatsApp Image 2025-06-21 at 12 34 34_fb3a259f](https://github.com/user-attachments/assets/a6f32302-ba55-4eb3-a45b-ff46d23945ad)
+* ![WhatsApp Image 2025-06-21 at 12 36 31_5196858a](https://github.com/user-attachments/assets/b484d993-9780-4d9e-8467-7d0f78afa6a2)
+* ![WhatsApp Image 2025-06-21 at 17 12 00_22e42f24](https://github.com/user-attachments/assets/a888279f-3fd5-4bb6-b57f-e9351f4b70fe)
+* ![WhatsApp Image 2025-06-21 at 17 14 19_3e0ed50d](https://github.com/user-attachments/assets/dd8fef5f-9276-47fd-89c0-934476b1d2ea)
+* ![WhatsApp Image 2025-06-21 at 17 14 44_5e370b18](https://github.com/user-attachments/assets/6dd63870-7d99-4304-ae3f-5df82d0ac101)
+
+```python
+
+```
