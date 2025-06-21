@@ -214,8 +214,146 @@ We want to incorporate that more into $\pi_\theta$, but not let it rise too much
 Action is selected from $\pi_{\text{old}}$. **$\hat{A}_t$** tells us that the action is not good.  
 We want to incorporate that into $\pi_\theta$, but not let it decrease too much — so we clip the **lower bound**.
 
+```python
+def ppo_update(total_steps_done:int):
+    buf_size = len(buffer.rewards)
+
+    buf_states = torch.stack(buffer.states).to(xonfig.device).detach() # (B, state_dim)
+    buf_actions = torch.stack(buffer.actions).to(xonfig.device).detach() # (B, num_actions)
+
+    # buf_returns = torch.tensor(
+    #     get_discounted_returns(buffer.rewards, buffer.dones, xonfig.gamma),
+    #     device=xonfig.device
+    # ).unsqueeze(-1).detach()
+    # if buf_size > 1:
+    #     buf_returns = ((buf_returns - buf_returns.mean()) / (buf_returns.std() + 1e-6)).detach()
+    
+    buf_action_logproba = torch.stack(buffer.log_probs).to(xonfig.device).detach() # (B, 1)
+
+    advantages = torch.tensor(
+        calculate_advantages_gae(
+            rewards_list=buffer.rewards,
+            state_values_list=buffer.state_values,
+            gamma=xonfig.gamma,
+            trace_decay=xonfig.trace_decay
+        ), device=xonfig.device
+    ).unsqueeze(-1).detach() # (B, 1)
+
+    buf_returns = (advantages + torch.as_tensor(buffer.state_values, device=xonfig.device).unsqueeze(-1)).detach() 
+
+    if buf_size > 1:
+        advantages = ((advantages - advantages.mean()) / (advantages.std() + 1e-6)).detach() # (B, 1)
+
+    # K Epochs
+    losses = {"policy": [], "value": []}
+    kldivs_list = []; norm:tp.Optional[Tensor] = None
+    for _ in range(xonfig.K):
+        for start_idx in range(0, buf_size - xonfig.batch_size + 1, xonfig.batch_size):
+            batch_idx = slice(start_idx, min(start_idx + xonfig.batch_size, buf_size))
+            batch_returns = buf_returns[batch_idx] # (B, 1)
+            batch_advantages = advantages[batch_idx] # (B, 1)
+            batch_states = buf_states[batch_idx] # (B, state_dim)
+            batch_actions = buf_actions[batch_idx] # (B, action_dim)
+            batch_action_logprobs = buf_action_logproba[batch_idx] # (B, 1)
+
+            # Compute advantage
+            with autocast:  # Ensure all forward passes and loss computations are inside this block
+                mean:Tensor; std:Tensor; state_value:Tensor
+                (mean, std), state_value = actor_critic(batch_states) # ((B, num_actions), (B, num_actions)), (B, 1)
+
+                # compute new action logprobas
+                covariance_matrix = torch.diag_embed(std.pow(2)) # (B, num_actions, num_actions)
+                dist = torch.distributions.MultivariateNormal(
+                    loc=mean, covariance_matrix=covariance_matrix
+                )
+                new_action_logprobas:Tensor = dist.log_prob(batch_actions).unsqueeze(-1) # (B, 1)
+
+                # value loss
+                value_loss = nn.functional.mse_loss(state_value, batch_returns)
+
+                # policy loss
+                log_ratios = new_action_logprobas - batch_action_logprobs # (B, 1)
+                r = log_ratios.exp()
+                unclipped_obj = r * batch_advantages
+                clipped_obj = r.clip(1-xonfig.clip_range, 1+xonfig.clip_range) * batch_advantages
+                policy_loss = -torch.min(unclipped_obj, clipped_obj).mean()
+
+                # KL divergence
+                with torch.no_grad():
+                    # https://github.com/DLR-RM/stable-baselines3/blob/master/stable_baselines3/ppo/ppo.py#L262-L265
+                    # http://joschu.net/blog/kl-approx.html
+                    log_ratios = log_ratios.detach()
+                    approx_kl_div = ((log_ratios.exp() - 1) - log_ratios).mean().cpu().item()
+                    kldivs_list.append(approx_kl_div)
+
+                if xonfig.target_kl is not None and approx_kl_div > xonfig.target_kl * 1.5:
+                    break
+
+                entropy_loss:Tensor = -dist.entropy().mean()
+
+            (policy_loss + xonfig.val_coeff * value_loss + xonfig.entropy_coeff * entropy_loss).backward()
+
+            if xonfig.clip_norm > 0:
+                norm = nn.utils.clip_grad_norm_(
+                    actor_critic.parameters(), xonfig.clip_norm
+                )
+            optimizer.step()
+            optimizer.zero_grad(set_to_none=True)
+            
+            losses["policy"].append(policy_loss.cpu().item())
+            losses["value"].append(value_loss.cpu().item())
+            
+    if xonfig.logg_tb:
+        if norm is not None:
+            writer.add_scalar("losses/grad_norm", norm.cpu().item(), total_steps_done)
+    
+    buffer.clear()
+    actor_critic_old.load_state_dict(actor_critic.state_dict())
+    avg = lambda x: sum(x)/max(len(x), 1)
+    return avg(losses["policy"]), avg(losses["value"]), avg(kldivs_list)
+```
+
 ## Deep Deterministic Policy Gradient (DDPG)
 ![WhatsApp Image 2025-06-20 at 23 27 53_46a142bb](https://github.com/user-attachments/assets/e1f0c4a0-c0aa-4ddb-82c1-afdd15a1b8b0)
+```python
+def ddpg_train_step(
+    states:Tensor,
+    actions:Tensor,
+    next_states:Tensor,
+    rewards:Tensor,
+    is_terminal:Tensor
+):
+    """
+    * `states`: `(n, state_dim)`
+    * `actions`: `(n, action_dim)`
+    * `next_states`: `(n, state_dim)`
+    * `rewards`: `(n,)`
+    * `is_terminal`: `(n,)`
+    """
+    rewards, is_terminal = rewards.unsqueeze(-1), is_terminal.unsqueeze(-1) # (n,) -> (n, 1)
+
+    # Optimize DQN/Critic
+    with torch.no_grad(): # anyway models in this block are not trainable
+        q_next_state = dqn_ema_net(next_states, actor_ema_net(next_states)) # (n, 1)
+        q_target = rewards + xonfig.gamma * q_next_state * (1 - is_terminal) # (n, 1)
+    q_pred = dqn_net(states, actions) # (n, 1)
+    qloss = nn.functional.mse_loss(q_pred, q_target, reduction="sum") # (,)
+    qloss.backward()
+    dqn_optimizer.step()
+    dqn_optimizer.zero_grad()
+    
+    # Optimize Actor
+    dqn_net.requires_grad_(False)
+    ## Assuming that the critic Q is a trained model, 
+    ## if Q(s, a) is high, then the action a is good, else bad if Q(s, a) is low action a is bad.
+    ## we want the actor_net to tweak it's actions such that the Q(s, actor_net(s)) is high (Q is freezed, so Q won't tweak it's weights to make Q(s, actor_net(s)) high)
+    ## so we want to maximize Q(s, actor_net(s)) -> minimize -Q(s, actor_net(s))
+    actor_loss:Tensor = -dqn_net(states, actor_net(states)).sum()
+    actor_loss.backward()
+    actor_optimizer.step()
+    actor_optimizer.zero_grad()
+    dqn_net.requires_grad_(True)
+```
 
 ## Soft Actor Critic (SAC)
 * ![image](https://github.com/user-attachments/assets/b2cd1d8f-7a90-4c32-b0da-23657b9ff106)
@@ -228,5 +366,56 @@ We want to incorporate that into $\pi_\theta$, but not let it decrease too much 
 * ![WhatsApp Image 2025-06-21 at 17 14 44_5e370b18](https://github.com/user-attachments/assets/6dd63870-7d99-4304-ae3f-5df82d0ac101)
 
 ```python
+@torch.compile()
+def sac_train_step(
+    states:Tensor,
+    actions:Tensor,
+    next_states:Tensor,
+    rewards:Tensor,
+    is_terminal:Tensor
+):
+    """
+    * `states`: `(B, state_dim)`
+    * `actions`: `(B, action_dim)`
+    * `next_states`: `(B, state_dim)`
+    * `rewards`: `(B,)`
+    * `is_terminal`: `(B,)`
+    """
+    rewards, is_terminal = rewards.unsqueeze(-1), is_terminal.unsqueeze(-1) # (B,) => (B, 1)    
 
+    # Optimize DQNs
+    ## a_next ~ π(s_next)
+    ## get target Q values: y = r + γ * ( Q_target(s_next, a_next) - α * log(π(a_next|s_next)) ) * (1 - is_terminal)
+    ## L1 = MSE(Q1(s, a), y) ## L2 = MSE(Q2(s, a), y) ## optimize loss (L1, L2)
+    with torch.no_grad():
+        actions_next, log_prob = sample_actions(next_states, ACTION_BOUNDS)
+        q_next1, q_next2 = dqn_target1(next_states, actions_next), dqn_target2(next_states, actions_next) # (B, 1), (B, 1)
+        # why min of the two q values? To avoid maximization bias, see https://arxiv.org/abs/1812.05905
+        q_next:Tensor = torch.min(q_next1, q_next2) - xonfig.alpha * log_prob # (B, 1)
+        q_next_target:Tensor = rewards + xonfig.gamma * q_next * (1 - is_terminal) # (B, 1)
+    
+    dqn1_loss = nn.functional.mse_loss(dqn1(states, actions), q_next_target, reduction="mean")
+    dqn2_loss = nn.functional.mse_loss(dqn2(states, actions), q_next_target, reduction="mean")
+    (dqn1_loss + dqn2_loss).backward() # dqn1_loss.backward(); dqn2_loss.backward()
+    dqn1_optimizer.step(); dqn2_optimizer.step()
+    dqn1_optimizer.zero_grad(); dqn2_optimizer.zero_grad()
+
+    # Optimize Policy
+    dqn1.requires_grad_(False); dqn2.requires_grad_(False)
+    actions, log_probs = sample_actions(states, ACTION_BOUNDS)
+    ## maximize entropy, minimize negative entropy
+    ## maximize q value by minimizing -q value, tweaks the policy weights through the actions to maximize q value, doesn't tweak the q network itself as they are freezed
+    pi_loss:Tensor = (xonfig.alpha * log_probs - torch.min(dqn1(states, actions), dqn2(states, actions))).mean()
+    pi_loss.backward()
+    policy_optimizer.step()
+    policy_optimizer.zero_grad()
+    dqn1.requires_grad_(True); dqn2.requires_grad_(True)
+
+    # Optimize Alpha
+    if xonfig.adaptive_alpha:
+        alpha_loss = -log_alpha * (log_prob + target_entropy).mean()
+        alpha_loss.backward()
+        alpha_optimizer.step()
+        alpha_optimizer.zero_grad()
+        xonfig.alpha = log_alpha.exp().item()
 ```
