@@ -173,14 +173,15 @@ Where:
 
 $$r_t = \frac{\pi_{\theta}(a_t|s_t)}{\pi_{\theta_{\text{old}}}(a_t|s_t)}$$
 
+* $r_t > 1$: The new policy assigns higher probability to action $a_t$ than the old policy.
+  * If $\hat{A}_t > 0$ (good action): we want to encourage this, i.e., keep $r_t > 1$.
+  * But to avoid too large an update, we clip the upper bound to $1 + \epsilon$.
+  * If $\hat{A}_t < 0$ (bad action): this increase is not desired, so the clip can reduce its effect.
 
-
-If **$r_t > 0$**: $\pi_\theta$ is more confident about action $a_t$ than $\pi_{\text{old}}$.
-We want this confidence to increase — but not so much that it shoots off.
-
-If **$r_t < 0$**: $\pi_\theta$ is more confident about action $a_t$ than $\pi_{\text{old}}$.
-We want this confidence to decrease — not so much that it shoots off.
-
+* $r_t < 1$: The new policy assigns lower probability to $a_t$ than the old policy.
+  * If $\hat{A}_t < 0$: this is good (we want to reduce probability of bad actions).
+  * But again, clip the lower bound to $1 - \epsilon$ to avoid over-correction.
+  * If $\hat{A}_t > 0$: we don’t want to reduce probability of good actions, so clipping protects us from harmful updates.
 
 Expanded form:
 
