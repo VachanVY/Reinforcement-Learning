@@ -38,8 +38,8 @@ def value_iteration(env:gym.Env, gamma:float, theta:float):
             V[state] = max(
                 [sum([p*(r + gamma*V[s_]) for p, s_, r, _ in env.unwrapped.P[state][action]]) for action in range(env.action_space.n)]
             )
-            delta = max(delta, abs(v - V[state]))
-        if delta < theta:
+            delta = max(delta, abs(v - V[state])) # take the max difference, instead of checking the difference for all states
+        if delta < theta: # if the change is small enough, we can stop
             break
     return V
 

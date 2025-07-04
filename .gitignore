@@ -1,7 +1,7 @@
 books
 testing
 *copy*
-runs
+runs*
 *.ipynb
 
 # Ignore all files in the ckpt directory
