@@ -40,9 +40,17 @@
 | 2020     | [Mastering Atari, Go, Chess and Shogi with a Learned Model](#)  | Multiple Environments (Planning with Models)| -                | ! -   |
 | 20xx     | [AlphaFold](#)                                                  | Protein Folding - Predict protein structures| -     | -   | -->
 
+# Blog...
 
+
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=VachanVY/Reinforcement-Learning&type=Date)](https://www.star-history.com/#VachanVY/Reinforcement-Learning&Date)
 
 ---
+
+<!--
 
 ## Reinforcement Learning: An Introduction by Andrew Barto and Richard S. Sutton
 > Below links don't redirect anywhere, gotta refactor the code and add links, for now go to the repo directly👆
@@ -68,6 +76,7 @@
   * [REINFORCE with Baseline]()
   * [One-Step Actor-Critic]()
   * Policy Gradient on Continuous Actions (**TODO**)
+
 
 ---
 ## Reinforcement Learning: Paper Implementations
@@ -205,3 +214,4 @@ python qlearning_sarsa_expectedsarsa_on_cliff_walking.py --animation True --expe
 
 ![image](https://github.com/user-attachments/assets/57246c91-0eeb-44c4-ac28-db057afef960)
 
+-->
