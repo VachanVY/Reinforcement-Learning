@@ -58,13 +58,13 @@ class xonfig:
     gamma:float = 0.99
     device:torch.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     num_updates:int = 1 # idk why but for 10 updates, result's weren't so great...
-    update_every_n_steps:int = 10
+    update_every_n_steps:int = 1
 
     adaptive_alpha:bool = True
-    alpha:float = 0.12 # initial value
+    alpha:float = 0.2 # initial value
     tau: float = 0.005
 
-    buffer_size:int = 100_000
+    buffer_size:int = 500_000
     batch_size:int = 64
     dqn_lr:float = 5e-4
     actor_lr:float = 5e-4
