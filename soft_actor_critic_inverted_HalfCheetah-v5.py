@@ -20,7 +20,7 @@ from torch import nn, Tensor
 from torch.utils.tensorboard import SummaryWriter
 
 
-ENV_NAME = "Swimmer-v5"
+ENV_NAME = "HalfCheetah-v5"
 
 
 def update_scene(num, frames, patch):
@@ -64,7 +64,7 @@ def show_one_episode(
 
 @dc.dataclass
 class xonfig:
-    num_episodes:int = 23
+    num_episodes:int = 100
     gamma:float = 0.99
 
     device:torch.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
