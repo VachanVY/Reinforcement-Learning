@@ -44,7 +44,14 @@
 
 | **Year** | **Paper**                                                       | **Environment (Name & Goal)**               | **Environment GIF**                           | **Plots**               |
 |----------|-----------------------------------------------------------------|---------------------------------------------|-----------------------------------------------|-------------------------|
-| 2010     | [A Reduction of Imitation Learning and Structured Prediction to No-Regret Online Learning](#)             |  **HalfCheetah-v5**: The goal is to apply torque to the joints to make the cheetah run forward (right) as fast as possible, with a positive reward based on the distance moved forward and a negative reward for moving backward  | Learner Policy:![yo](images/learner_policy_imitation_learning_animation.gif) Expert Policy: ![yo](images/expert_policy_imitation_learning_animation.gif) | Loss ![yo](images/imitation_learning_loss.png) Rollout Sum of Rewards (goes high sometimes in beginning because of expert policy {switching between learner policy & expert policy}):![yo](images/rollout_sumrewads_imitation_learning.png)  |
+| 2010     | [A Reduction of Imitation Learning and Structured Prediction to No-Regret Online Learning](#)             |  **HalfCheetah-v5**: The goal is to apply torque to the joints to make the cheetah run forward (right) as fast as possible, with a positive reward based on the distance moved forward and a negative reward for moving backward  | Learner Policy:![yo](images/learner_policy_imitation_learning_animation.gif) Expert Policy: ![yo](images/expert_policy_imitation_learning_animation.gif) | Loss ![yo](images/imitation_learning_loss.png) Rollout Sum of Rewards (goes high sometimes in the beginning because of expert policy {switching between learner policy & expert policy}):![yo](images/rollout_sumrewads_imitation_learning.png)  |
+| 2015     | [Advanced Policy Gradients: Trust Region Policy Optimization](#)             |   |  |
+| -     | Model-based Deep-RL             |   |  |
+| -     | Exploration             |   |  |
+| -     | Offline-RL             |   |  |
+| -     | Inverse-RL             |   |  |
+| -     | RL with Seq models             |   |  |
+| -     | Meta RL and Transfer Learning             |   |  |
 
 # Blog...
 
